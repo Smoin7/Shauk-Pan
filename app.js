@@ -6,17 +6,25 @@ function addItem() {
 
   cart.push({ item, qty });
 
-  renderCart();
-}
-
 function renderCart() {
   const ul = document.getElementById("cart");
   ul.innerHTML = "";
-  cart.forEach(i => {
+
+  cart.forEach((i, index) => {
     const li = document.createElement("li");
-    li.textContent = `${i.item} × ${i.qty}`;
+    li.innerHTML = `
+      ${i.item} × ${i.qty}
+      <button onclick="removeItem(${index})">❌</button>
+    `;
     ul.appendChild(li);
   });
+}
+
+function removeItem(index) {
+  cart.splice(index, 1);
+  renderCart();
+}
+
 }
 
 function submitOrder() {
