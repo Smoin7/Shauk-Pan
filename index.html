@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shauk Pan Order</title>
+</head>
+<body>
+
+<h2>🍃 Shauk Pan Order</h2>
+
+<input id="name" placeholder="Name" required><br><br>
+<input id="mobile" placeholder="Mobile" required><br><br>
+
+<select id="orderType">
+  <option value="Pickup">Pickup</option>
+  <option value="Delivery">Delivery</option>
+</select><br><br>
+
+<textarea id="address" placeholder="Address (if delivery)"></textarea>
+
+<hr>
+
+<h3>Add Items</h3>
+
+<select id="item">
+  <option>Meetha Pan</option>
+  <option>Saada Pan</option>
+  <option>Chocolate Pan</option>
+  <option>Fire Pan</option>
+  <!-- add 50+ items here -->
+</select>
+
+<input type="number" id="qty" min="1" value="1">
+
+<button type="button" onclick="addItem()">Add</button>
+
+<ul id="cart"></ul>
+
+<button onclick="submitOrder()">Submit Order</button>
+
+<script src="app.js"></script>
+</body>
+</html>
