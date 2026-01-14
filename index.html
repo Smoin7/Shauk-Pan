@@ -1,42 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Shauk Pan Order</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+  <div class="container">
 
-<h2>🍃 Shauk Pan Order</h2>
+    <!-- LEFT : LOGO -->
+    <div class="logo-section">
+      <img src="logo.png" alt="Shauk Pan Logo">
+      <h2>Shauk Pan</h2>
+      <p>Fresh • Hygienic • Authentic</p>
+    </div>
 
-<input id="name" placeholder="Name" required><br><br>
-<input id="mobile" placeholder="Mobile" required><br><br>
+    <!-- RIGHT : FORM -->
+    <div class="form-section">
+      <h3>🍃 Place Your Order</h3>
 
-<select id="orderType">
-  <option value="Pickup">Pickup</option>
-  <option value="Delivery">Delivery</option>
-</select><br><br>
+      <input id="name" placeholder="Your Name" required>
+      <input id="mobile" placeholder="Mobile Number" required>
 
-<textarea id="address" placeholder="Address (if delivery)"></textarea>
+      <select id="orderType">
+        <option value="Pickup">Pickup</option>
+        <option value="Delivery">Delivery</option>
+      </select>
 
-<hr>
+      <textarea id="address" placeholder="Delivery Address (if any)"></textarea>
 
-<h3>Add Items</h3>
+      <hr>
 
-<select id="item">
-  <option>Meetha Pan</option>
-  <option>Saada Pan</option>
-  <option>Chocolate Pan</option>
-  <option>Fire Pan</option>
-  <!-- add 50+ items here -->
-</select>
+      <h4>Add Items</h4>
 
-<input type="number" id="qty" min="1" value="1">
+      <div class="item-row">
+        <select id="item">
+          <option>Meetha Pan</option>
+          <option>Saada Pan</option>
+          <option>Chocolate Pan</option>
+          <option>Fire Pan</option>
+          <!-- add more -->
+        </select>
 
-<button type="button" onclick="addItem()">Add</button>
+        <input type="number" id="qty" min="1" value="1">
+        <button type="button" onclick="addItem()">Add</button>
+      </div>
 
-<ul id="cart"></ul>
+      <ul id="cart"></ul>
 
-<button onclick="submitOrder()">Submit Order</button>
+      <button class="submit-btn" onclick="submitOrder()">
+        Submit Order
+      </button>
+    </div>
 
-<script src="app.js"></script>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
