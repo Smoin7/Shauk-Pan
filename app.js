@@ -53,7 +53,7 @@ function submitOrder() {
     items: cart
   };
 
-  fetch("https://YOUR-N8N-URL/webhook/pan-order", {
+  fetch("https://khawaja98.app.n8n.cloud/webhook/pan-order", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
