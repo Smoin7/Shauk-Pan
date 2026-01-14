@@ -1,11 +1,20 @@
 const cart = [];
 
+// ADD ITEM
 function addItem() {
   const item = document.getElementById("item").value;
   const qty = Number(document.getElementById("qty").value);
 
-  cart.push({ item, qty });
+  if (!item || qty < 1) {
+    alert("Please select item and quantity");
+    return;
+  }
 
+  cart.push({ item, qty });
+  renderCart();
+}
+
+// RENDER CART
 function renderCart() {
   const ul = document.getElementById("cart");
   ul.innerHTML = "";
@@ -14,19 +23,19 @@ function renderCart() {
     const li = document.createElement("li");
     li.innerHTML = `
       ${i.item} × ${i.qty}
-      <button onclick="removeItem(${index})">❌</button>
+      <button type="button" onclick="removeItem(${index})">❌</button>
     `;
     ul.appendChild(li);
   });
 }
 
+// REMOVE ITEM
 function removeItem(index) {
   cart.splice(index, 1);
   renderCart();
 }
 
-}
-
+// SUBMIT ORDER
 function submitOrder() {
   const data = {
     name: document.getElementById("name").value,
