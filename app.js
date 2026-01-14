@@ -1,11 +1,15 @@
 const cart = [];
 
+// ADD ITEM
 function addItem() {
   const item = document.getElementById("item").value;
   const qty = Number(document.getElementById("qty").value);
 
   cart.push({ item, qty });
+  renderCart(); // ✅ this was missing
+}
 
+// RENDER CART
 function renderCart() {
   const ul = document.getElementById("cart");
   ul.innerHTML = "";
@@ -16,7 +20,7 @@ function renderCart() {
     li.innerHTML = `
       ${i.item} × ${i.qty}
       <button 
-        type="button" 
+        type="button"
         onclick="removeItem(${index})"
         style="
           margin-left:10px;
@@ -33,6 +37,13 @@ function renderCart() {
   });
 }
 
+// REMOVE ITEM
+function removeItem(index) {
+  cart.splice(index, 1);
+  renderCart();
+}
+
+// SUBMIT ORDER
 function submitOrder() {
   const data = {
     name: document.getElementById("name").value,
