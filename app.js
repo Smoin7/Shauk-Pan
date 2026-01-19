@@ -1,7 +1,11 @@
-// ✅ OBJECT cart (blocks duplicate pan types)
+/************************************
+ * CART & PRICE CONFIG
+ ************************************/
+
+// Object-based cart → blocks duplicate pan types
 const cart = {};
 
-// Price map (later you can fetch from Pan_Inventory)
+// Price map (later replace with Pan_Inventory API)
 const panPriceMap = {
   "Meetha Pan": 15,
   "Saada Pan": 10,
@@ -9,22 +13,25 @@ const panPriceMap = {
   "Fire Pan": 50
 };
 
-// ADD ITEM
+
+/************************************
+ * ADD ITEM
+ ************************************/
 function addItem() {
-  const panType = document.getElementById('item').value; // ✅ FIX
-  const qty = parseInt(document.getElementById('qty').value); // ✅ FIX
+  const panType = document.getElementById("item").value;
+  const qty = parseInt(document.getElementById("qty").value);
 
   if (!panType) {
-    alert('Please select a pan type');
+    alert("Please select a pan type");
     return;
   }
 
   if (!qty || qty <= 0) {
-    alert('Please enter valid quantity');
+    alert("Please enter a valid quantity");
     return;
   }
 
-  // 🚫 BLOCK DUPLICATE PAN TYPE
+  // 🚫 Block duplicate pan types
   if (cart[panType]) {
     alert(`${panType} already added. You cannot add it again.`);
     return;
@@ -38,7 +45,10 @@ function addItem() {
   renderCart();
 }
 
-// RENDER CART
+
+/************************************
+ * RENDER CART + TOTAL
+ ************************************/
 function renderCart() {
   const ul = document.getElementById("cart");
   ul.innerHTML = "";
@@ -52,24 +62,40 @@ function renderCart() {
     const li = document.createElement("li");
     li.innerHTML = `
       ${pan} × ${data.qty} = ₹${lineTotal}
-      <button 
+      <button
         type="button"
         onclick="removeItem('${pan}')"
-        style="margin-left:10px;color:red;border:none;background:none;cursor:pointer;"
+        style="
+          margin-left:10px;
+          background:none;
+          border:none;
+          color:red;
+          font-size:16px;
+          cursor:pointer;
+        "
       >✖</button>
     `;
 
     ul.appendChild(li);
   });
+
+  // ✅ Update total in UI
+  document.getElementById("totalPrice").innerText = total;
 }
 
-// REMOVE ITEM
+
+/************************************
+ * REMOVE ITEM
+ ************************************/
 function removeItem(panType) {
   delete cart[panType];
   renderCart();
 }
 
-// SUBMIT ORDER
+
+/************************************
+ * SUBMIT ORDER
+ ************************************/
 function submitOrder() {
   if (Object.keys(cart).length === 0) {
     alert("Please add at least one pan");
@@ -81,7 +107,7 @@ function submitOrder() {
     qty: data.qty
   }));
 
-  const data = {
+  const payload = {
     name: document.getElementById("name").value,
     mobile: document.getElementById("mobile").value,
     orderType: document.getElementById("orderType").value,
@@ -93,8 +119,8 @@ function submitOrder() {
   fetch("https://shaikh98.app.n8n.cloud/webhook/pan-order", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
+    body: JSON.stringify(payload)
   })
     .then(() => alert("✅ Order Successful!"))
-    .catch(() => alert("❌ Failed"));
+    .catch(() => alert("❌ Order Failed"));
 }
