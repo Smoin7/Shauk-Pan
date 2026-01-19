@@ -1,4 +1,10 @@
-const cart = [];
+// ✅ OBJECT cart (key = pan type)
+const cart = {};
+const panPriceMap = {
+  "Saada Pan": 10,
+  "Chocolate Pan": 80,
+  "Kulfi Pan": 60
+};
 
 // ADD ITEM
 function addItem() {
@@ -21,10 +27,9 @@ function addItem() {
     return;
   }
 
-  // add once
   cart[panType] = {
     qty: qty,
-    price: panPriceMap[panType] // fetched from Pan_Inventory
+    price: panPriceMap[panType]
   };
 
   renderCart();
@@ -35,14 +40,18 @@ function renderCart() {
   const ul = document.getElementById("cart");
   ul.innerHTML = "";
 
-  cart.forEach((i, index) => {
+  let total = 0;
+
+  Object.entries(cart).forEach(([pan, data]) => {
     const li = document.createElement("li");
+    const lineTotal = data.qty * data.price;
+    total += lineTotal;
 
     li.innerHTML = `
-      ${i.item} × ${i.qty}
+      ${pan} × ${data.qty} = ₹${lineTotal}
       <button 
         type="button"
-        onclick="removeItem(${index})"
+        onclick="removeItem('${pan}')"
         style="
           margin-left:10px;
           background:none;
@@ -56,22 +65,29 @@ function renderCart() {
 
     ul.appendChild(li);
   });
+
+  document.getElementById("totalPrice").innerText = `₹${total}`;
 }
 
 // REMOVE ITEM
-function removeItem(index) {
-  cart.splice(index, 1);
+function removeItem(panType) {
+  delete cart[panType];
   renderCart();
 }
 
 // SUBMIT ORDER
 function submitOrder() {
+  const items = Object.entries(cart).map(([pan, data]) => ({
+    item: pan,
+    qty: data.qty
+  }));
+
   const data = {
     name: document.getElementById("name").value,
     mobile: document.getElementById("mobile").value,
     orderType: document.getElementById("orderType").value,
     address: document.getElementById("address").value,
-    items: cart
+    items: items
   };
 
   fetch("https://shaikh98.app.n8n.cloud/webhook/pan-order", {
