@@ -1,15 +1,18 @@
-// ✅ OBJECT cart (key = pan type)
+// ✅ OBJECT cart (blocks duplicate pan types)
 const cart = {};
+
+// Price map (later you can fetch from Pan_Inventory)
 const panPriceMap = {
+  "Meetha Pan": 15,
   "Saada Pan": 10,
-  "Chocolate Pan": 80,
-  "Kulfi Pan": 60
+  "Chocolate Pan": 25,
+  "Fire Pan": 50
 };
 
 // ADD ITEM
 function addItem() {
-  const panType = document.getElementById('panSelect').value;
-  const qty = parseInt(document.getElementById('qtyInput').value);
+  const panType = document.getElementById('item').value; // ✅ FIX
+  const qty = parseInt(document.getElementById('qty').value); // ✅ FIX
 
   if (!panType) {
     alert('Please select a pan type');
@@ -29,7 +32,7 @@ function addItem() {
 
   cart[panType] = {
     qty: qty,
-    price: panPriceMap[panType]
+    price: panPriceMap[panType] || 0
   };
 
   renderCart();
@@ -43,30 +46,21 @@ function renderCart() {
   let total = 0;
 
   Object.entries(cart).forEach(([pan, data]) => {
-    const li = document.createElement("li");
     const lineTotal = data.qty * data.price;
     total += lineTotal;
 
+    const li = document.createElement("li");
     li.innerHTML = `
       ${pan} × ${data.qty} = ₹${lineTotal}
       <button 
         type="button"
         onclick="removeItem('${pan}')"
-        style="
-          margin-left:10px;
-          background:none;
-          border:none;
-          color:red;
-          font-size:16px;
-          cursor:pointer;
-        "
+        style="margin-left:10px;color:red;border:none;background:none;cursor:pointer;"
       >✖</button>
     `;
 
     ul.appendChild(li);
   });
-
-  document.getElementById("totalPrice").innerText = `₹${total}`;
 }
 
 // REMOVE ITEM
@@ -77,6 +71,11 @@ function removeItem(panType) {
 
 // SUBMIT ORDER
 function submitOrder() {
+  if (Object.keys(cart).length === 0) {
+    alert("Please add at least one pan");
+    return;
+  }
+
   const items = Object.entries(cart).map(([pan, data]) => ({
     item: pan,
     qty: data.qty
@@ -87,6 +86,7 @@ function submitOrder() {
     mobile: document.getElementById("mobile").value,
     orderType: document.getElementById("orderType").value,
     address: document.getElementById("address").value,
+    branch: document.getElementById("branch").value,
     items: items
   };
 
@@ -95,6 +95,6 @@ function submitOrder() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   })
-  .then(() => alert("✅ Order Successful!"))
-  .catch(() => alert("❌ Failed"));
+    .then(() => alert("✅ Order Successful!"))
+    .catch(() => alert("❌ Failed"));
 }
