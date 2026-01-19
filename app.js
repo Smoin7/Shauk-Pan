@@ -1,11 +1,11 @@
 /************************************
- * CART & PRICE CONFIG
+ * GLOBAL CART & PRICE CONFIG
  ************************************/
 
-// Object-based cart → blocks duplicate pan types
+// Object cart to block duplicate pan types
 const cart = {};
 
-// Price map (later replace with Pan_Inventory API)
+// Static price map (replace later with Pan_Inventory fetch)
 const panPriceMap = {
   "Meetha Pan": 15,
   "Saada Pan": 10,
@@ -19,7 +19,7 @@ const panPriceMap = {
  ************************************/
 function addItem() {
   const panType = document.getElementById("item").value;
-  const qty = parseInt(document.getElementById("qty").value);
+  const qty = parseInt(document.getElementById("qty").value, 10);
 
   if (!panType) {
     alert("Please select a pan type");
@@ -33,7 +33,7 @@ function addItem() {
 
   // 🚫 Block duplicate pan types
   if (cart[panType]) {
-    alert(`${panType} already added. You cannot add it again.`);
+    alert(`${panType} already added. Remove it first to change quantity.`);
     return;
   }
 
@@ -51,8 +51,14 @@ function addItem() {
  ************************************/
 function renderCart() {
   const ul = document.getElementById("cart");
-  ul.innerHTML = "";
+  const totalEl = document.getElementById("totalPrice");
 
+  if (!ul || !totalEl) {
+    console.error("cart or totalPrice element not found in DOM");
+    return;
+  }
+
+  ul.innerHTML = "";
   let total = 0;
 
   Object.entries(cart).forEach(([pan, data]) => {
@@ -79,8 +85,11 @@ function renderCart() {
     ul.appendChild(li);
   });
 
-  // ✅ Update total in UI
-  document.getElementById("totalPrice").innerText = total;
+  // ✅ UPDATE TOTAL IN UI (CRITICAL LINE)
+  totalEl.innerText = total;
+
+  // Debug (can remove later)
+  console.log("Total calculated:", total);
 }
 
 
