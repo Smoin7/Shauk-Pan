@@ -32,13 +32,13 @@
       <textarea id="address" placeholder="Delivery Address (if any)"></textarea>
 
       <!-- SELECT BRANCH -->
-<label for="branch"><b>Select Branch</b></label>
-<select id="branch" required>
-  <option value="">-- Select Location --</option>
-  <option value="Kondhwa">Kondhwa</option>
-  <option value="Mundwa">Mundwa</option>
-  <option value="Ghorpade">Ghorpade</option>
-</select>
+      <label for="branch"><b>Select Branch</b></label>
+      <select id="branch" required>
+        <option value="">-- Select Location --</option>
+        <option value="Kondhwa">Kondhwa</option>
+        <option value="Mundwa">Mundwa</option>
+        <option value="Ghorpade">Ghorpade</option>
+      </select>
       
       <hr>
 
@@ -50,15 +50,30 @@
           <option>Saada Pan</option>
           <option>Chocolate Pan</option>
           <option>Fire Pan</option>
-          <!-- add more -->
         </select>
 
         <input type="number" id="qty" min="1" value="1">
         <button type="button" onclick="addItem()">Add</button>
       </div>
 
+      <!-- CART ITEMS -->
       <ul id="cart"></ul>
 
+      <!-- ✅ TOTAL AMOUNT (NEW) -->
+      <div 
+        id="totalBox" 
+        style="
+          text-align: right;
+          font-weight: bold;
+          font-size: 18px;
+          margin-top: 10px;
+          margin-bottom: 10px;
+        "
+      >
+        Total: ₹<span id="totalPrice">0</span>
+      </div>
+
+      <!-- SUBMIT -->
       <button class="submit-btn" onclick="submitOrder()">
         Submit Order
       </button>
