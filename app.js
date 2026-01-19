@@ -2,11 +2,32 @@ const cart = [];
 
 // ADD ITEM
 function addItem() {
-  const item = document.getElementById("item").value;
-  const qty = Number(document.getElementById("qty").value);
+  const panType = document.getElementById('panSelect').value;
+  const qty = parseInt(document.getElementById('qtyInput').value);
 
-  cart.push({ item, qty });
-  renderCart(); // ✅ this was missing
+  if (!panType) {
+    alert('Please select a pan type');
+    return;
+  }
+
+  if (!qty || qty <= 0) {
+    alert('Please enter valid quantity');
+    return;
+  }
+
+  // 🚫 BLOCK DUPLICATE PAN TYPE
+  if (cart[panType]) {
+    alert(`${panType} already added. You cannot add it again.`);
+    return;
+  }
+
+  // add once
+  cart[panType] = {
+    qty: qty,
+    price: panPriceMap[panType] // fetched from Pan_Inventory
+  };
+
+  renderCart();
 }
 
 // RENDER CART
