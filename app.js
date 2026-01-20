@@ -1,5 +1,5 @@
 /************************************
- * GLOBAL CART & PRICE CONFIG
+ * GLOBAL CART & PRICE CONFIG 
  ************************************/
 
 // Object cart to block duplicate pan types
