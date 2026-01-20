@@ -15,6 +15,26 @@ const panPriceMap = {
 
 
 /************************************
+ * ORDER TYPE LOGIC (NEW)
+ ************************************/
+function toggleAddress() {
+  const orderType = document.getElementById("orderType").value;
+  const addressBox = document.getElementById("addressBox");
+  const addressInput = document.getElementById("address");
+
+  if (orderType === "delivery") {
+    addressBox.style.display = "block";
+  } else {
+    addressBox.style.display = "none";
+    addressInput.value = ""; // clear address on pickup
+  }
+}
+
+// Auto-run on page load (default Pickup)
+document.addEventListener("DOMContentLoaded", toggleAddress);
+
+
+/************************************
  * ADD ITEM
  ************************************/
 function addItem() {
@@ -85,10 +105,9 @@ function renderCart() {
     ul.appendChild(li);
   });
 
-  // ✅ UPDATE TOTAL IN UI (CRITICAL LINE)
+  // ✅ UPDATE TOTAL IN UI
   totalEl.innerText = total;
 
-  // Debug (can remove later)
   console.log("Total calculated:", total);
 }
 
@@ -111,6 +130,14 @@ function submitOrder() {
     return;
   }
 
+  const orderType = document.getElementById("orderType").value;
+  const address = document.getElementById("address").value;
+
+  if (orderType === "delivery" && !address.trim()) {
+    alert("Please enter delivery address");
+    return;
+  }
+
   const items = Object.entries(cart).map(([pan, data]) => ({
     item: pan,
     qty: data.qty
@@ -119,8 +146,8 @@ function submitOrder() {
   const payload = {
     name: document.getElementById("name").value,
     mobile: document.getElementById("mobile").value,
-    orderType: document.getElementById("orderType").value,
-    address: document.getElementById("address").value,
+    orderType: orderType,
+    address: orderType === "delivery" ? address : "",
     branch: document.getElementById("branch").value,
     items: items
   };
