@@ -216,6 +216,35 @@ textarea:focus {
   .logo-section {
     padding: 25px;
   }
+/* EXTRA GAP BEFORE SECTION HEADERS */
+.section-box label {
+  display: block;
+  margin-top: 14px;   /* space from previous input */
+  margin-bottom: 4px;
+}
+
+/* FIRST LABEL IN A SECTION SHOULD NOT STICK */
+.section-box label:first-of-type {
+  margin-top: 0;
+}
+
+/* INPUTS SHOULD BREATHE A BIT MORE */
+.section-box input,
+.section-box select,
+.section-box textarea {
+  margin-bottom: 14px;
+}
+
+/* HELPER TEXT SPACING */
+.section-box p {
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+
+/* OPTIONAL: tiny divider feel without line */
+.section-box + .section-box {
+  margin-top: 6px;
+}
 
   .form-section {
     padding: 25px;
