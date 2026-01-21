@@ -37,7 +37,7 @@ function loadPanInventory() {
   const select = document.getElementById("item");
 
   // Initial state
-  select.innerHTML = `<option value="">Loading pans...</option>`;
+  select.innerHTML = `<option value="">Loading Paans...</option>`;
 
   fetch(INVENTORY_API)
     .then(res => {
