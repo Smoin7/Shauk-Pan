@@ -1,21 +1,20 @@
 /************************************
- * GLOBAL CART & PRICE CONFIG 
+ * GLOBAL CART & INVENTORY CONFIG
  ************************************/
 
 // Object cart to block duplicate pan types
 const cart = {};
 
-// Static price map (replace later with Pan_Inventory fetch)
-const panPriceMap = {
-  "Meetha Pan": 15,
-  "Saada Pan": 10,
-  "Chocolate Pan": 25,
-  "Fire Pan": 50
-};
+// Dynamic price map (filled from Pan_Inventory API)
+const panPriceMap = {};
+
+// 🔗 Inventory API (n8n)
+const INVENTORY_API =
+  "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
 
 
 /************************************
- * ORDER TYPE LOGIC (NEW)
+ * ORDER TYPE LOGIC
  ************************************/
 function toggleAddress() {
   const orderType = document.getElementById("orderType").value;
@@ -26,12 +25,59 @@ function toggleAddress() {
     addressBox.style.display = "block";
   } else {
     addressBox.style.display = "none";
-    addressInput.value = ""; // clear address on pickup
+    addressInput.value = "";
   }
 }
 
-// Auto-run on page load (default Pickup)
-document.addEventListener("DOMContentLoaded", toggleAddress);
+
+/************************************
+ * LOAD PAN INVENTORY (NEW)
+ ************************************/
+function loadPanInventory() {
+  const select = document.getElementById("item");
+
+  // Initial state
+  select.innerHTML = `<option value="">Loading pans...</option>`;
+
+  fetch(INVENTORY_API)
+    .then(res => {
+      if (!res.ok) throw new Error("Inventory API failed");
+      return res.json();
+    })
+    .then(data => {
+      select.innerHTML = `<option value="">-- Select Pan --</option>`;
+
+      if (!data.pans || data.pans.length === 0) {
+        select.innerHTML = `<option value="">No pans available</option>`;
+        return;
+      }
+
+      data.pans.forEach(pan => {
+        // Fill price map
+        panPriceMap[pan.name] = pan.price;
+
+        // Add dropdown option
+        const opt = document.createElement("option");
+        opt.value = pan.name;
+        opt.textContent = `${pan.name} (₹${pan.price})`;
+        select.appendChild(opt);
+      });
+    })
+    .catch(err => {
+      console.error("Failed to load pan inventory:", err);
+      select.innerHTML = `<option value="">Unable to load pans</option>`;
+      alert("⚠ Unable to load pan list. Please refresh.");
+    });
+}
+
+
+/************************************
+ * PAGE LOAD INIT
+ ************************************/
+document.addEventListener("DOMContentLoaded", () => {
+  toggleAddress();
+  loadPanInventory();
+});
 
 
 /************************************
@@ -51,6 +97,11 @@ function addItem() {
     return;
   }
 
+  if (!panPriceMap[panType]) {
+    alert("Invalid pan selected. Please refresh.");
+    return;
+  }
+
   // 🚫 Block duplicate pan types
   if (cart[panType]) {
     alert(`${panType} already added. Remove it first to change quantity.`);
@@ -59,7 +110,7 @@ function addItem() {
 
   cart[panType] = {
     qty: qty,
-    price: panPriceMap[panType] || 0
+    price: panPriceMap[panType]
   };
 
   renderCart();
@@ -72,11 +123,6 @@ function addItem() {
 function renderCart() {
   const ul = document.getElementById("cart");
   const totalEl = document.getElementById("totalPrice");
-
-  if (!ul || !totalEl) {
-    console.error("cart or totalPrice element not found in DOM");
-    return;
-  }
 
   ul.innerHTML = "";
   let total = 0;
@@ -101,14 +147,10 @@ function renderCart() {
         "
       >✖</button>
     `;
-
     ul.appendChild(li);
   });
 
-  // ✅ UPDATE TOTAL IN UI
   totalEl.innerText = total;
-
-  console.log("Total calculated:", total);
 }
 
 
@@ -157,6 +199,9 @@ function submitOrder() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   })
-    .then(() => alert("✅ Order Successful!"))
+    .then(() => {
+      alert("✅ Order Successful!");
+      location.reload();
+    })
     .catch(() => alert("❌ Order Failed"));
 }
