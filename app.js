@@ -45,10 +45,10 @@ function loadPanInventory() {
       return res.json();
     })
     .then(data => {
-      select.innerHTML = `<option value="">-- Select Pan --</option>`;
+      select.innerHTML = `<option value="">-- Select Paan --</option>`;
 
       if (!data.pans || data.pans.length === 0) {
-        select.innerHTML = `<option value="">No pans available</option>`;
+        select.innerHTML = `<option value="">No Paans available</option>`;
         return;
       }
 
@@ -65,7 +65,7 @@ function loadPanInventory() {
     })
     .catch(err => {
       console.error("Failed to load pan inventory:", err);
-      select.innerHTML = `<option value="">Unable to load pans</option>`;
+      select.innerHTML = `<option value="">Unable to load Paans</option>`;
       alert("⚠ Unable to load pan list. Please refresh.");
     });
 }
@@ -88,7 +88,7 @@ function addItem() {
   const qty = parseInt(document.getElementById("qty").value, 10);
 
   if (!panType) {
-    alert("Please select a pan type");
+    alert("Please select a Paan type");
     return;
   }
 
@@ -98,7 +98,7 @@ function addItem() {
   }
 
   if (!panPriceMap[panType]) {
-    alert("Invalid pan selected. Please refresh.");
+    alert("Invalid Paan selected. Please refresh.");
     return;
   }
 
@@ -168,7 +168,7 @@ function removeItem(panType) {
  ************************************/
 function submitOrder() {
   if (Object.keys(cart).length === 0) {
-    alert("Please add at least one pan");
+    alert("Please add at least one Paan");
     return;
   }
 
