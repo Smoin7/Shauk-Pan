@@ -10,18 +10,17 @@
 <body>
   <div class="container">
 
-    <!-- LEFT : LOGO -->
+    <!-- LEFT -->
     <div class="logo-section">
       <img src="logo.png" alt="Shauk Pan Logo">
       <h2>Shauk Paan</h2>
       <p>Fresh • Hygienic • Authentic</p>
     </div>
 
-    <!-- RIGHT : FORM -->
+    <!-- RIGHT -->
     <div class="form-section">
       <h3>🍃 Place Your Order</h3>
 
-      <!-- BASIC DETAILS -->
       <div class="section-box">
         <input id="name" placeholder="Your Name" required>
         <input id="mobile" placeholder="Mobile Number" required>
@@ -37,16 +36,12 @@
         </p>
 
         <select id="orderType" onchange="toggleAddress()">
-          <option value="pickup">🏃 Pickup (Collect from shop)</option>
+          <option value="pickup">🏃 Pickup</option>
           <option value="delivery">🛵 Home Delivery</option>
         </select>
 
-        <!-- ADDRESS (HIDDEN FOR PICKUP) -->
         <div id="addressBox" style="margin-top:10px;">
-          <textarea
-            id="address"
-            placeholder="Enter delivery address"
-          ></textarea>
+          <textarea id="address" placeholder="Enter delivery address"></textarea>
         </div>
       </div>
 
@@ -54,8 +49,8 @@
 
       <!-- BRANCH -->
       <div class="section-box">
-        <label for="branch"><b>Select Branch</b></label>
-        <select id="branch" required>
+        <label><b>Select Branch</b></label>
+        <select id="branch">
           <option value="">-- Select Location --</option>
           <option value="Kondhwa">Kondhwa</option>
           <option value="Mundwa">Mundwa</option>
@@ -64,30 +59,24 @@
         </select>
       </div>
 
-      <!-- ADD ITEMS -->
+      <!-- ITEMS -->
       <div class="section-box">
         <h4>Add Items</h4>
 
         <div class="item-row">
-          <!-- 🔹 PAN DROPDOWN (DYNAMIC) -->
-          <select id="item">
-            <option value="">Loading paans...</option>
-          </select>
-
+          <select id="item"></select>
           <input type="number" id="qty" min="1" value="1">
           <button type="button" onclick="addItem()">Add</button>
         </div>
 
-        <!-- CART ITEMS -->
         <ul id="cart"></ul>
 
-        <!-- TOTAL AMOUNT -->
         <div id="totalBox">
           Total: ₹<span id="totalPrice">0</span>
         </div>
       </div>
 
-      <!-- SUBMIT -->
+      <!-- BOOK NOW -->
       <button class="submit-btn" onclick="bookNow()">
         Book Now
       </button>
@@ -95,7 +84,6 @@
 
   </div>
 
-  <!-- JS -->
   <script src="app.js"></script>
 </body>
 </html>
