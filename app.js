@@ -205,3 +205,11 @@ function submitOrder() {
     })
     .catch(() => alert("❌ Order Failed"));
 }
+
+
+/************************************
+ * BOOK NOW (ONLY ADDITION)
+ ************************************/
+function bookNow() {
+  window.location.href = "payment.html";
+}
