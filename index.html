@@ -1,89 +1,147 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Shauk Paan Order</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-</head>
+/************************************
+ * GLOBAL CART
+ ************************************/
+const cart = {};
+const panPriceMap = {};
 
-<body>
-  <div class="container">
+const INVENTORY_API =
+  "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
 
-    <!-- LEFT -->
-    <div class="logo-section">
-      <img src="logo.png" alt="Shauk Pan Logo">
-      <h2>Shauk Paan</h2>
-      <p>Fresh • Hygienic • Authentic</p>
-    </div>
+/************************************
+ * ORDER TYPE
+ ************************************/
+function toggleAddress() {
+  const orderType = document.getElementById("orderType").value;
+  const addressBox = document.getElementById("addressBox");
 
-    <!-- RIGHT -->
-    <div class="form-section">
-      <h3>🍃 Place Your Order</h3>
+  addressBox.style.display = orderType === "delivery" ? "block" : "none";
+  if (orderType === "pickup") {
+    document.getElementById("address").value = "";
+  }
+}
 
-      <div class="section-box">
-        <input id="name" placeholder="Your Name" required>
-        <input id="mobile" placeholder="Mobile Number" required>
-      </div>
+/************************************
+ * LOAD INVENTORY
+ ************************************/
+function loadPanInventory() {
+  const select = document.getElementById("item");
+  select.innerHTML = `<option>Loading...</option>`;
 
-      <br>
+  fetch(INVENTORY_API)
+    .then(res => res.json())
+    .then(data => {
+      select.innerHTML = `<option value="">-- Select Paan --</option>`;
+      data.pans.forEach(pan => {
+        panPriceMap[pan.name] = pan.price;
+        const opt = document.createElement("option");
+        opt.value = pan.name;
+        opt.textContent = `${pan.name} (₹${pan.price})`;
+        select.appendChild(opt);
+      });
+    });
+}
 
-      <!-- ORDER TYPE -->
-      <div class="section-box">
-        <label><b>Order Type</b></label>
-        <p style="font-size:12px;color:#666;">
-          How would you like to receive your Paan?
-        </p>
+document.addEventListener("DOMContentLoaded", () => {
+  toggleAddress();
+  loadPanInventory();
+});
 
-        <select id="orderType" onchange="toggleAddress()">
-          <option value="pickup">🏃 Pickup</option>
-          <option value="delivery">🛵 Home Delivery</option>
-        </select>
+/************************************
+ * ADD ITEM
+ ************************************/
+function addItem() {
+  const pan = item.value;
+  const qty = parseInt(qtyInput.value || qty.value);
 
-        <div id="addressBox" style="margin-top:10px;">
-          <textarea id="address" placeholder="Enter delivery address"></textarea>
-        </div>
-      </div>
+  if (!pan || qty <= 0) {
+    alert("Select item and quantity");
+    return;
+  }
 
-      <br>
+  if (cart[pan]) {
+    alert("Item already added");
+    return;
+  }
 
-      <!-- BRANCH -->
-      <div class="section-box">
-        <label><b>Select Branch</b></label>
-        <select id="branch">
-          <option value="">-- Select Location --</option>
-          <option value="Kondhwa">Kondhwa</option>
-          <option value="Mundwa">Mundwa</option>
-          <option value="Ghorpadi">Ghorpadi</option>
-          <option value="Koregaon Park">Koregaon Park</option>
-        </select>
-      </div>
+  cart[pan] = { qty, price: panPriceMap[pan] };
+  renderCart();
+}
 
-      <!-- ITEMS -->
-      <div class="section-box">
-        <h4>Add Items</h4>
+const qtyInput = document.getElementById("qty");
 
-        <div class="item-row">
-          <select id="item"></select>
-          <input type="number" id="qty" min="1" value="1">
-          <button type="button" onclick="addItem()">Add</button>
-        </div>
+/************************************
+ * RENDER CART
+ ************************************/
+function renderCart() {
+  const ul = document.getElementById("cart");
+  const totalEl = document.getElementById("totalPrice");
 
-        <ul id="cart"></ul>
+  ul.innerHTML = "";
+  let total = 0;
 
-        <div id="totalBox">
-          Total: ₹<span id="totalPrice">0</span>
-        </div>
-      </div>
+  for (let pan in cart) {
+    const line = cart[pan].qty * cart[pan].price;
+    total += line;
 
-      <!-- BOOK NOW -->
-      <button class="submit-btn" onclick="bookNow()">
-        Book Now
-      </button>
-    </div>
+    ul.innerHTML += `
+      <li>
+        ${pan} × ${cart[pan].qty} = ₹${line}
+        <button onclick="removeItem('${pan}')">✖</button>
+      </li>`;
+  }
 
-  </div>
+  totalEl.innerText = total;
+}
 
-  <script src="app.js"></script>
-</body>
-</html>
+function removeItem(pan) {
+  delete cart[pan];
+  renderCart();
+}
+
+/************************************
+ * BOOK NOW (FIXED)
+ ************************************/
+function bookNow() {
+  const name = document.getElementById("name").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const orderType = document.getElementById("orderType").value;
+  const address = document.getElementById("address").value.trim();
+  const branch = document.getElementById("branch").value;
+
+  if (!name || !mobile || !branch) {
+    alert("Fill all required details");
+    return;
+  }
+
+  if (orderType === "delivery" && !address) {
+    alert("Enter delivery address");
+    return;
+  }
+
+  if (Object.keys(cart).length === 0) {
+    alert("Add at least one item");
+    return;
+  }
+
+  const items = [];
+  let total = 0;
+
+  for (let pan in cart) {
+    const t = cart[pan].qty * cart[pan].price;
+    total += t;
+    items.push({ pan, ...cart[pan], total: t });
+  }
+
+  const orderData = {
+    name,
+    mobile,
+    orderType,
+    address,
+    branch,
+    items,
+    total
+  };
+
+  localStorage.setItem("shaukPaanOrder", JSON.stringify(orderData));
+  window.location.href = "payment.html";
+}
