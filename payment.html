@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <h2>💳 Payment Details</h2>
+
+  <div id="summary"></div>
+
+  <button onclick="confirmOrder()">Confirm & Place Order</button>
+
+  <script>
+    const order = JSON.parse(localStorage.getItem("shaukPaanOrder"));
+    if (!order) location.href = "index.html";
+
+    let html = `
+      <p><b>Name:</b> ${order.name}</p>
+      <p><b>Mobile:</b> ${order.mobile}</p>
+      <p><b>Branch:</b> ${order.branch}</p>
+      <hr>
+    `;
+
+    order.items.forEach(i => {
+      html += `<p>${i.pan} × ${i.qty} = ₹${i.total}</p>`;
+    });
+
+    html += `<h3>Total: ₹${order.total}</h3>`;
+    document.getElementById("summary").innerHTML = html;
+
+    function confirmOrder() {
+      fetch("https://shaikh98.app.n8n.cloud/webhook/pan-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(order)
+      })
+      .then(() => {
+        alert("✅ Order Placed Successfully!");
+        localStorage.removeItem("shaukPaanOrder");
+        window.location.href = "index.html";
+      })
+      .catch(() => alert("❌ Order Failed"));
+    }
+  </script>
+</body>
+</html>
