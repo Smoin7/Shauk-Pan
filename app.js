@@ -36,7 +36,6 @@ function toggleAddress() {
 function loadPanInventory() {
   const select = document.getElementById("item");
 
-  // Initial state
   select.innerHTML = `<option value="">Loading Paans...</option>`;
 
   fetch(INVENTORY_API)
@@ -205,9 +204,9 @@ function submitOrder() {
 
 
 /************************************
- * BOOK NOW (FIXED – AWAITS WEBHOOK)
+ * BOOK NOW (SAVE → PAYMENT PAGE)
  ************************************/
-async function bookNow() {
+function bookNow() {
   const name = document.getElementById("name").value.trim();
   const mobile = document.getElementById("mobile").value.trim();
   const orderType = document.getElementById("orderType").value;
@@ -251,35 +250,21 @@ async function bookNow() {
     lineTotal: data.qty * data.price
   }));
 
-  const payload = {
+  // ✅ SAVE ORDER FOR PAYMENT PAGE
+  const pendingOrder = {
     name: name,
     mobile: mobile,
     orderType: orderType,
     address: orderType === "delivery" ? address : "",
     branch: branch,
-    items: items,
-    totalAmount: totalAmount
+    items: items
   };
 
-  try {
-    const response = await fetch(
-      "https://shaikh98.app.n8n.cloud/webhook/pan-order",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      }
-    );
+  localStorage.setItem(
+    "shaukPaanPendingOrder",
+    JSON.stringify(pendingOrder)
+  );
 
-    if (!response.ok) {
-      throw new Error("Webhook request failed");
-    }
-
-    // ✅ webhook definitely reached n8n
-    window.location.href = "payment.html";
-
-  } catch (err) {
-    console.error("Order webhook error:", err);
-    alert("❌ Failed to place order. Please try again.");
-  }
+  // ✅ Redirect to payment page
+  window.location.href = "payment.html";
 }
