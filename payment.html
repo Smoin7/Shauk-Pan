@@ -42,127 +42,121 @@
 
 <body>
 
-  <h2>💳 Payment</h2>
+<h2>💳 Payment</h2>
 
-  <div id="orderDetails"></div>
+<div id="orderDetails"></div>
 
-  <!-- ✅ Button calls GLOBAL function -->
-  <button onclick="confirmOrder()">Confirm & Place Order</button>
+<button onclick="confirmOrder()">Confirm & Place Order</button>
 
-  <script>
-    const DELIVERY_CHARGE = 50;
+<script>
+  const DELIVERY_CHARGE = 50;
 
-    let order = null;
-    let orderId = null;
-    let itemsTotal = 0;
-    let deliveryCharge = 0;
-    let finalTotal = 0;
+  let order = null;
+  let itemsTotal = 0;
+  let deliveryCharge = 0;
+  let finalTotal = 0;
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const raw = localStorage.getItem("shaukPaanPendingOrder");
+  document.addEventListener("DOMContentLoaded", () => {
+    const raw = localStorage.getItem("shaukPaanPendingOrder");
 
-      if (!raw) {
-        alert("No order found. Please place order again.");
-        window.location.href = "index.html";
-        return;
-      }
+    if (!raw) {
+      alert("No order found. Please place order again.");
+      window.location.href = "index.html";
+      return;
+    }
 
-      order = JSON.parse(raw);
+    order = JSON.parse(raw);
 
-      // ✅ SINGLE SOURCE OF TRUTH
-      orderId = "ORD-" + Date.now();
+    let itemsHtml = "";
+    itemsTotal = 0;
 
-      let itemsHtml = "";
-      itemsTotal = 0;
-
-      order.items.forEach(item => {
-        itemsTotal += item.lineTotal;
-        itemsHtml += `
-          <div class="row">
-            <span>${item.item} × ${item.qty}</span>
-            <span>₹${item.lineTotal}</span>
-          </div>
-        `;
-      });
-
-      const isDelivery = order.orderType === "delivery";
-      deliveryCharge = isDelivery ? DELIVERY_CHARGE : 0;
-      finalTotal = itemsTotal + deliveryCharge;
-
-      document.getElementById("orderDetails").innerHTML = `
-        <div class="box">
-          <div class="row"><b>Order ID</b><span>${orderId}</span></div>
-          <div class="row"><b>Name</b><span>${order.name}</span></div>
-          <div class="row"><b>Mobile</b><span>${order.mobile}</span></div>
-          <div class="row"><b>Order Type</b><span>${order.orderType}</span></div>
-          <div class="row"><b>Branch</b><span>${order.branch}</span></div>
-          ${
-            isDelivery
-              ? `<div class="row"><b>Address</b><span>${order.address}</span></div>`
-              : ""
-          }
-        </div>
-
-        <div class="box">
-          <h4>Items</h4>
-          ${itemsHtml}
-          ${
-            isDelivery
-              ? `<div class="row"><span>Delivery Charge</span><span>₹${deliveryCharge}</span></div>`
-              : ""
-          }
-          <div class="row total">
-            <span>Total</span>
-            <span>₹${finalTotal}</span>
-          </div>
+    order.items.forEach(item => {
+      itemsTotal += item.lineTotal;
+      itemsHtml += `
+        <div class="row">
+          <span>${item.item} × ${item.qty}</span>
+          <span>₹${item.lineTotal}</span>
         </div>
       `;
     });
 
-    // ✅ GLOBAL FUNCTION — webhook WILL fire
-    async function confirmOrder() {
-      if (!order || !orderId) {
-        alert("Order data missing");
-        return;
-      }
+    const isDelivery = order.orderType === "delivery";
+    deliveryCharge = isDelivery ? DELIVERY_CHARGE : 0;
+    finalTotal = itemsTotal + deliveryCharge;
 
-      const payload = {
-        Order_ID: orderId,
-        Name: order.name,
-        Mobile: order.mobile,
-        pan_summary: order.items
-          .map(i => `${i.item}: ${i.qty}`)
-          .join(", "),
-        Branch: order.branch,
-        Order_Type: order.orderType,
-        Address: order.address || "",
-        Payment_Mode: "Pending",
-        Timestamp: new Date().toLocaleString("en-IN"),
-        Total_Amount: finalTotal
-      };
+    document.getElementById("orderDetails").innerHTML = `
+      <div class="box">
+        <div class="row"><b>Name</b><span>${order.name}</span></div>
+        <div class="row"><b>Mobile</b><span>${order.mobile}</span></div>
+        <div class="row"><b>Order Type</b><span>${order.orderType}</span></div>
+        <div class="row"><b>Branch</b><span>${order.branch}</span></div>
+        ${
+          isDelivery
+            ? `<div class="row"><b>Address</b><span>${order.address}</span></div>`
+            : ""
+        }
+      </div>
 
-      try {
-        const res = await fetch(
-          "https://shaikh98.app.n8n.cloud/webhook/paan-order",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          }
-        );
+      <div class="box">
+        <h4>Items</h4>
+        ${itemsHtml}
+        ${
+          isDelivery
+            ? `<div class="row"><span>Delivery Charge</span><span>₹${deliveryCharge}</span></div>`
+            : ""
+        }
+        <div class="row total">
+          <span>Total</span>
+          <span>₹${finalTotal}</span>
+        </div>
+      </div>
+    `;
+  });
 
-        if (!res.ok) throw new Error();
-
-        alert("✅ Order placed successfully");
-        localStorage.removeItem("shaukPaanPendingOrder");
-        window.location.href = "index.html";
-
-      } catch (err) {
-        console.error("Webhook error:", err);
-        alert("❌ Failed to place order. Please try again.");
-      }
+  async function confirmOrder() {
+    if (!order) {
+      alert("Order data missing");
+      return;
     }
-  </script>
+
+    const payload = {
+      Name: order.name,
+      Mobile: order.mobile,
+      pan_summary: order.items
+        .map(i => `${i.item}: ${i.qty}`)
+        .join(", "),
+      Branch: order.branch,
+      Order_Type: order.orderType,
+      Address: order.address || "",
+      Payment_Mode: "Pending",
+      Timestamp: new Date().toISOString(),
+      Total_Amount: finalTotal
+    };
+
+    try {
+      const res = await fetch(
+        "https://shaikh98.app.n8n.cloud/webhook/paan-order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!res.ok) throw new Error("Webhook failed");
+
+      const data = await res.json(); // 👈 n8n returns Order_ID
+      alert(`✅ Order placed successfully\nOrder ID: ${data.Order_ID}`);
+
+      localStorage.removeItem("shaukPaanPendingOrder");
+      window.location.href = "index.html";
+
+    } catch (err) {
+      console.error("Webhook error:", err);
+      alert("❌ Failed to place order. Please try again.");
+    }
+  }
+</script>
 
 </body>
 </html>
