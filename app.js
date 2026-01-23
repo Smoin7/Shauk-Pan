@@ -190,7 +190,7 @@ function submitOrder() {
     items: items
   };
 
-  fetch("https://shaikh98.app.n8n.cloud/webhook/pan-order", {
+  fetch("https://shaikh98.app.n8n.cloud/webhook/paan-order", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
