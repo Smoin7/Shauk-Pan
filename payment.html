@@ -1,79 +1,154 @@
-<script>
-document.addEventListener("DOMContentLoaded", () => {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Payment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  const DELIVERY_CHARGE = 50;
-
-  const raw = localStorage.getItem("shaukPaanPendingOrder");
-
-  if (!raw) {
-    alert("No order found. Please place order again.");
-    return; // ❌ DO NOT redirect immediately
-  }
-
-  const order = JSON.parse(raw);
-
-  // ✅ Generate Order ID
-  const orderId = "SP" + Date.now();
-
-  let itemsHtml = "";
-  let itemsTotal = 0;
-
-  order.items.forEach(item => {
-    itemsTotal += item.lineTotal;
-    itemsHtml += `
-      <div style="display:flex;justify-content:space-between">
-        <span>${item.item} × ${item.qty}</span>
-        <span>₹${item.lineTotal}</span>
-      </div>
-    `;
-  });
-
-  const isDelivery = order.orderType === "delivery";
-  const deliveryCharge = isDelivery ? DELIVERY_CHARGE : 0;
-  const finalTotal = itemsTotal + deliveryCharge;
-
-  document.getElementById("orderDetails").innerHTML = `
-    <p><b>Order ID:</b> ${orderId}</p>
-    <p><b>Name:</b> ${order.name}</p>
-    <p><b>Mobile:</b> ${order.mobile}</p>
-    <p><b>Order Type:</b> ${order.orderType}</p>
-    <p><b>Branch:</b> ${order.branch}</p>
-    ${isDelivery ? `<p><b>Address:</b> ${order.address}</p>` : ""}
-
-    <hr>
-    ${itemsHtml}
-    ${isDelivery ? `<p>Delivery Charge: ₹${deliveryCharge}</p>` : ""}
-    <h3>Total: ₹${finalTotal}</h3>
-  `;
-
-  window.confirmOrder = async function () {
-    const payload = {
-      orderId,
-      ...order,
-      deliveryCharge,
-      totalAmount: finalTotal
-    };
-
-    try {
-      const res = await fetch(
-        "https://shaikh98.app.n8n.cloud/webhook/pan-order",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        }
-      );
-
-      if (!res.ok) throw new Error();
-
-      alert("✅ Order placed successfully");
-      localStorage.removeItem("shaukPaanPendingOrder");
-      window.location.href = "index.html";
-
-    } catch {
-      alert("❌ Failed to place order");
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 16px;
+      background: #f9f9f9;
     }
-  };
+    .box {
+      background: #fff;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin: 6px 0;
+    }
+    .total {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #0aa06e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
+  </style>
+</head>
 
-});
-</script>
+<body>
+
+  <h2>💳 Payment</h2>
+
+  <!-- 🔴 THIS WAS MISSING -->
+  <div id="orderDetails"></div>
+
+  <button onclick="confirmOrder()">Confirm & Place Order</button>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const DELIVERY_CHARGE = 50;
+
+      const raw = localStorage.getItem("shaukPaanPendingOrder");
+
+      if (!raw) {
+        alert("No order found. Please place order again.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      const order = JSON.parse(raw);
+
+      const orderId = "SP" + Date.now();
+
+      let itemsHtml = "";
+      let itemsTotal = 0;
+
+      order.items.forEach(item => {
+        itemsTotal += item.lineTotal;
+        itemsHtml += `
+          <div class="row">
+            <span>${item.item} × ${item.qty}</span>
+            <span>₹${item.lineTotal}</span>
+          </div>
+        `;
+      });
+
+      const isDelivery = order.orderType === "delivery";
+      const deliveryCharge = isDelivery ? DELIVERY_CHARGE : 0;
+      const finalTotal = itemsTotal + deliveryCharge;
+
+      document.getElementById("orderDetails").innerHTML = `
+        <div class="box">
+          <div class="row"><b>Order ID</b><span>${orderId}</span></div>
+          <div class="row"><b>Name</b><span>${order.name}</span></div>
+          <div class="row"><b>Mobile</b><span>${order.mobile}</span></div>
+          <div class="row"><b>Order Type</b><span>${order.orderType}</span></div>
+          <div class="row"><b>Branch</b><span>${order.branch}</span></div>
+          ${
+            isDelivery
+              ? `<div class="row"><b>Address</b><span>${order.address}</span></div>`
+              : ""
+          }
+        </div>
+
+        <div class="box">
+          <h4>Items</h4>
+          ${itemsHtml}
+          ${
+            isDelivery
+              ? `<div class="row"><span>Delivery Charge</span><span>₹${deliveryCharge}</span></div>`
+              : ""
+          }
+          <div class="row total">
+            <span>Total</span>
+            <span>₹${finalTotal}</span>
+          </div>
+        </div>
+      `;
+
+      window.confirmOrder = async function () {
+        const payload = {
+          orderId: orderId,
+          name: order.name,
+          mobile: order.mobile,
+          orderType: order.orderType,
+          branch: order.branch,
+          address: order.address || "",
+          items: order.items,
+          itemsTotal: itemsTotal,
+          deliveryCharge: deliveryCharge,
+          totalAmount: finalTotal
+        };
+
+        try {
+          const res = await fetch(
+            "https://shaikh98.app.n8n.cloud/webhook/pan-order",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            }
+          );
+
+          if (!res.ok) throw new Error();
+
+          alert("✅ Order placed successfully!");
+          localStorage.removeItem("shaukPaanPendingOrder");
+          window.location.href = "index.html";
+
+        } catch {
+          alert("❌ Failed to place order. Please try again.");
+        }
+      };
+
+    });
+  </script>
+
+</body>
+</html>
