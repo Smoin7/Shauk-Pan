@@ -208,8 +208,45 @@ function submitOrder() {
 
 
 /************************************
- * BOOK NOW (ONLY ADDITION)
+ * BOOK NOW (ONLY ADDITION, UPDATED)
  ************************************/
 function bookNow() {
+  const name = document.getElementById("name").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const orderType = document.getElementById("orderType").value;
+  const address = document.getElementById("address").value.trim();
+  const branch = document.getElementById("branch").value;
+
+  // Name validation
+  if (!name) {
+    alert("Please enter your name");
+    return;
+  }
+
+  // Mobile validation (10 digits)
+  if (!/^\d{10}$/.test(mobile)) {
+    alert("Please enter a valid 10-digit mobile number");
+    return;
+  }
+
+  // Branch validation
+  if (!branch) {
+    alert("Please select a branch");
+    return;
+  }
+
+  // Address validation for delivery
+  if (orderType === "delivery" && !address) {
+    alert("Please enter delivery address");
+    return;
+  }
+
+  // At least one paan must be added
+  if (Object.keys(cart).length === 0) {
+    alert("Please add at least one Paan to your order");
+    return;
+  }
+
+  // All validations passed
   window.location.href = "payment.html";
 }
