@@ -205,9 +205,9 @@ function submitOrder() {
 
 
 /************************************
- * BOOK NOW (TRIGGERS N8N WITH TOTAL)
+ * BOOK NOW (FIXED – AWAITS WEBHOOK)
  ************************************/
-function bookNow() {
+async function bookNow() {
   const name = document.getElementById("name").value.trim();
   const mobile = document.getElementById("mobile").value.trim();
   const orderType = document.getElementById("orderType").value;
@@ -258,18 +258,28 @@ function bookNow() {
     address: orderType === "delivery" ? address : "",
     branch: branch,
     items: items,
-    totalAmount: totalAmount   // ✅ SENT TO N8N
+    totalAmount: totalAmount
   };
 
-  fetch("https://shaikh98.app.n8n.cloud/webhook/pan-order", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  })
-    .then(() => {
-      window.location.href = "payment.html";
-    })
-    .catch(() => {
-      alert("❌ Failed to place order. Please try again.");
-    });
+  try {
+    const response = await fetch(
+      "https://shaikh98.app.n8n.cloud/webhook/pan-order",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Webhook request failed");
+    }
+
+    // ✅ webhook definitely reached n8n
+    window.location.href = "payment.html";
+
+  } catch (err) {
+    console.error("Order webhook error:", err);
+    alert("❌ Failed to place order. Please try again.");
+  }
 }
