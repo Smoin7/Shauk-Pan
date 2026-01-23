@@ -12,6 +12,9 @@ const panPriceMap = {};
 const INVENTORY_API =
   "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
 
+// 🚚 Delivery charge (change to 40 if needed)
+const DELIVERY_CHARGE = 50;
+
 
 /************************************
  * ORDER TYPE LOGIC
@@ -27,6 +30,9 @@ function toggleAddress() {
     addressBox.style.display = "none";
     addressInput.value = "";
   }
+
+  // 🔄 Recalculate total when order type changes
+  renderCart();
 }
 
 
@@ -36,7 +42,6 @@ function toggleAddress() {
 function loadPanInventory() {
   const select = document.getElementById("item");
 
-  // Initial state
   select.innerHTML = `<option value="">Loading Paans...</option>`;
 
   fetch(INVENTORY_API)
@@ -115,11 +120,12 @@ function addItem() {
 
 
 /************************************
- * RENDER CART + TOTAL
+ * RENDER CART + TOTAL (WITH DELIVERY)
  ************************************/
 function renderCart() {
   const ul = document.getElementById("cart");
   const totalEl = document.getElementById("totalPrice");
+  const orderType = document.getElementById("orderType").value;
 
   ul.innerHTML = "";
   let total = 0;
@@ -146,6 +152,15 @@ function renderCart() {
     `;
     ul.appendChild(li);
   });
+
+  // 🚚 Add delivery charge if applicable
+  if (orderType === "delivery" && total > 0) {
+    const li = document.createElement("li");
+    li.innerHTML = `Delivery Charge = ₹${DELIVERY_CHARGE}`;
+    ul.appendChild(li);
+
+    total += DELIVERY_CHARGE;
+  }
 
   totalEl.innerText = total;
 }
@@ -205,7 +220,7 @@ function submitOrder() {
 
 
 /************************************
- * BOOK NOW (FIXED – AWAITS WEBHOOK)
+ * BOOK NOW (WEBHOOK + DELIVERY TOTAL)
  ************************************/
 async function bookNow() {
   const name = document.getElementById("name").value.trim();
@@ -258,6 +273,7 @@ async function bookNow() {
     address: orderType === "delivery" ? address : "",
     branch: branch,
     items: items,
+    deliveryCharge: orderType === "delivery" ? DELIVERY_CHARGE : 0,
     totalAmount: totalAmount
   };
 
@@ -275,7 +291,6 @@ async function bookNow() {
       throw new Error("Webhook request failed");
     }
 
-    // ✅ webhook definitely reached n8n
     window.location.href = "payment.html";
 
   } catch (err) {
