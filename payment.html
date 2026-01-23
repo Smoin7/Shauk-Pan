@@ -44,16 +44,21 @@
 
   <h2>💳 Payment</h2>
 
-  <!-- 🔴 THIS WAS MISSING -->
   <div id="orderDetails"></div>
 
+  <!-- ✅ Button calls GLOBAL function -->
   <button onclick="confirmOrder()">Confirm & Place Order</button>
 
   <script>
+    const DELIVERY_CHARGE = 50;
+
+    let order = null;
+    let orderId = null;
+    let itemsTotal = 0;
+    let deliveryCharge = 0;
+    let finalTotal = 0;
+
     document.addEventListener("DOMContentLoaded", () => {
-
-      const DELIVERY_CHARGE = 50;
-
       const raw = localStorage.getItem("shaukPaanPendingOrder");
 
       if (!raw) {
@@ -62,12 +67,13 @@
         return;
       }
 
-      const order = JSON.parse(raw);
+      order = JSON.parse(raw);
 
-      const orderId = "SP" + Date.now();
+      // ✅ SINGLE SOURCE OF TRUTH
+      orderId = "ORD-" + Date.now();
 
       let itemsHtml = "";
-      let itemsTotal = 0;
+      itemsTotal = 0;
 
       order.items.forEach(item => {
         itemsTotal += item.lineTotal;
@@ -80,8 +86,8 @@
       });
 
       const isDelivery = order.orderType === "delivery";
-      const deliveryCharge = isDelivery ? DELIVERY_CHARGE : 0;
-      const finalTotal = itemsTotal + deliveryCharge;
+      deliveryCharge = isDelivery ? DELIVERY_CHARGE : 0;
+      finalTotal = itemsTotal + deliveryCharge;
 
       document.getElementById("orderDetails").innerHTML = `
         <div class="box">
@@ -111,43 +117,51 @@
           </div>
         </div>
       `;
+    });
 
-      window.confirmOrder = async function () {
-        const payload = {
-          orderId: orderId,
-          name: order.name,
-          mobile: order.mobile,
-          orderType: order.orderType,
-          branch: order.branch,
-          address: order.address || "",
-          items: order.items,
-          itemsTotal: itemsTotal,
-          deliveryCharge: deliveryCharge,
-          totalAmount: finalTotal
-        };
+    // ✅ GLOBAL FUNCTION — webhook WILL fire
+    async function confirmOrder() {
+      if (!order || !orderId) {
+        alert("Order data missing");
+        return;
+      }
 
-        try {
-          const res = await fetch(
-            "https://shaikh98.app.n8n.cloud/webhook/pan-order",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
-            }
-          );
-
-          if (!res.ok) throw new Error();
-
-          alert("✅ Order placed successfully!");
-          localStorage.removeItem("shaukPaanPendingOrder");
-          window.location.href = "index.html";
-
-        } catch {
-          alert("❌ Failed to place order. Please try again.");
-        }
+      const payload = {
+        Order_ID: orderId,
+        Name: order.name,
+        Mobile: order.mobile,
+        pan_summary: order.items
+          .map(i => `${i.item}: ${i.qty}`)
+          .join(", "),
+        Branch: order.branch,
+        Order_Type: order.orderType,
+        Address: order.address || "",
+        Payment_Mode: "Pending",
+        Timestamp: new Date().toLocaleString("en-IN"),
+        Total_Amount: finalTotal
       };
 
-    });
+      try {
+        const res = await fetch(
+          "https://shaikh98.app.n8n.cloud/webhook/pan-order",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }
+        );
+
+        if (!res.ok) throw new Error();
+
+        alert("✅ Order placed successfully");
+        localStorage.removeItem("shaukPaanPendingOrder");
+        window.location.href = "index.html";
+
+      } catch (err) {
+        console.error("Webhook error:", err);
+        alert("❌ Failed to place order. Please try again.");
+      }
+    }
   </script>
 
 </body>
