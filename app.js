@@ -53,10 +53,8 @@ function loadPanInventory() {
       }
 
       data.pans.forEach(pan => {
-        // Fill price map
         panPriceMap[pan.name] = pan.price;
 
-        // Add dropdown option
         const opt = document.createElement("option");
         opt.value = pan.name;
         opt.textContent = `${pan.name} (₹${pan.price})`;
@@ -102,7 +100,6 @@ function addItem() {
     return;
   }
 
-  // 🚫 Block duplicate pan types
   if (cart[panType]) {
     alert(`${panType} already added. Remove it first to change quantity.`);
     return;
@@ -164,7 +161,7 @@ function removeItem(panType) {
 
 
 /************************************
- * SUBMIT ORDER
+ * SUBMIT ORDER (UNCHANGED)
  ************************************/
 function submitOrder() {
   if (Object.keys(cart).length === 0) {
@@ -208,7 +205,7 @@ function submitOrder() {
 
 
 /************************************
- * BOOK NOW (UPDATED VALIDATION)
+ * BOOK NOW (TRIGGERS N8N WITH TOTAL)
  ************************************/
 function bookNow() {
   const name = document.getElementById("name").value.trim();
@@ -237,16 +234,42 @@ function bookNow() {
     return;
   }
 
-  // 🔴 IMPORTANT: total must be > 0
-  const total = parseInt(
+  const totalAmount = parseInt(
     document.getElementById("totalPrice").innerText,
     10
   );
 
-  if (!total || total <= 0) {
+  if (!totalAmount || totalAmount <= 0) {
     alert("Please add at least one Paan using the Add button");
     return;
   }
 
-  window.location.href = "payment.html";
+  const items = Object.entries(cart).map(([pan, data]) => ({
+    item: pan,
+    qty: data.qty,
+    price: data.price,
+    lineTotal: data.qty * data.price
+  }));
+
+  const payload = {
+    name: name,
+    mobile: mobile,
+    orderType: orderType,
+    address: orderType === "delivery" ? address : "",
+    branch: branch,
+    items: items,
+    totalAmount: totalAmount   // ✅ SENT TO N8N
+  };
+
+  fetch("https://shaikh98.app.n8n.cloud/webhook/pan-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+    .then(() => {
+      window.location.href = "payment.html";
+    })
+    .catch(() => {
+      alert("❌ Failed to place order. Please try again.");
+    });
 }
