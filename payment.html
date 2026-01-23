@@ -1,14 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Payment</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 16px;
+    }
+    .box {
+      border: 1px solid #ddd;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin: 6px 0;
+    }
+    .total {
+      font-weight: bold;
+      font-size: 18px;
+    }
+    button {
+      padding: 10px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
+
 <body>
 
-  <h2>Payment Page</h2>
-  <p>If you can see this and it stays, redirect is fixed.</p>
+<h2>💳 Order Payment</h2>
+
+<div id="orderDetails"></div>
+
+<button onclick="confirmOrder()">Confirm & Place Order</button>
+
+<script>
+  const DELIVERY_CHARGE = 50;
+
+  // 🔹 Load order from storage
+  const order = JSON.parse(
+    localStorage.getItem("shaukPaanPendingOrder")
+  );
+
+  if (!order) {
+    alert("No order found. Redirecting...");
+    window.location.href = "index.html";
+  }
+
+  // 🔹 Generate Order ID
+  const orderId = "SP" + Date.now();
+
+  let itemsHtml = "";
+  let itemsTotal = 0;
+
+  order.items.forEach(item => {
+    itemsTotal += item.lineTotal;
+    itemsHtml += `
+      <div class="row">
+        <span>${item.item} × ${item.qty}</span>
+        <span>₹${item.lineTotal}</span>
+      </div>
+    `;
+  });
+
+  // 🔹 Delivery charge logic
+  const isDelivery = order.orderType === "delivery";
+  const deliveryCharge = isDelivery ? DELIVERY_CHARGE : 0;
+
+  const finalTotal = itemsTotal + deliveryCharge;
+
+  // 🔹 Render UI
+  document.getElementById("orderDetails").innerHTML = `
+    <div class="box">
+      <div class="row"><b>Order ID</b><span>${orderId}</span></div>
+      <div class="row"><b>Name</b><span>${order.name}</span></div>
+      <div class="row"><b>Mobile</b><span>${order.mobile}</span></div>
+      <div class="row"><b>Order Type</b><span>${order.orderType}</span></div>
+      <div class="row"><b>Branch</b><span>${order.branch}</span></div>
+      ${
+        isDelivery
+          ? `<div class="row"><b>Address</b><span>${order.address}</span></div>`
+          : ""
+      }
+    </div>
+
+    <div class="box">
+      <h4>Items</h4>
+      ${itemsHtml}
+      ${
+        isDelivery
+          ? `<div class="row"><span>Delivery Charge</span><span>₹${deliveryCharge}</span></div>`
+          : ""
+      }
+      <div class="row total">
+        <span>Total</span>
+        <span>₹${finalTotal}</span>
+      </div>
+    </div>
+  `;
+
+  // 🔹 Confirm order → trigger n8n
+  async function confirmOrder() {
+    const payload = {
+      orderId: orderId,
+      name: order.name,
+      mobile: order.mobile,
+      orderType: order.orderType,
+      branch: order.branch,
+      address: order.address || "",
+      items: order.items,
+      itemsTotal: itemsTotal,
+      deliveryCharge: deliveryCharge,
+      totalAmount: finalTotal
+    };
+
+    try {
+      const res = await fetch(
+        "https://shaikh98.app.n8n.cloud/webhook/pan-order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!res.ok) throw new Error("Webhook failed");
+
+      alert("✅ Order placed successfully!");
+      localStorage.removeItem("shaukPaanPendingOrder");
+      window.location.href = "index.html";
+
+    } catch (err) {
+      alert("❌ Failed to place order. Please try again.");
+      console.error(err);
+    }
+  }
+</script>
 
 </body>
 </html>
