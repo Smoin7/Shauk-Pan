@@ -87,9 +87,19 @@
     </div>
 
     <div class="payment-actions">
-      <button class="cancel-btn" onclick="closePaymentPopup()">Cancel</button>
-      <button class="pay-btn" onclick="confirmPayment()">Confirm Order</button>
-    </div>
+  <button class="cancel-btn" onclick="closePaymentPopup()">
+    Cancel
+  </button>
+
+  <a id="upiPayBtn" class="pay-btn" href="#">
+    Pay via UPI
+  </a>
+</div>
+
+<p class="upi-hint">
+  You will be redirected to PhonePe / GPay / Paytm
+</p>
+
   </div>
 </div>
 
