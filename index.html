@@ -3,47 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <title>Shauk Paan Order</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="style.css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
 <div class="container">
 
-  <!-- LEFT -->
+  <!-- LEFT : LOGO -->
   <div class="logo-section">
-    <img src="logo.png" alt="Shauk Pan Logo">
+    <img src="logo.png" alt="Shauk Paan Logo" />
     <h2>Shauk Paan</h2>
     <p>Fresh • Hygienic • Authentic</p>
   </div>
 
-  <!-- RIGHT -->
+  <!-- RIGHT : ORDER FORM -->
   <div class="form-section">
     <h3>🍃 Place Your Order</h3>
 
+    <!-- CUSTOMER DETAILS -->
     <div class="section-box">
-      <input id="name" placeholder="Your Name">
-      <input id="mobile" placeholder="Mobile Number">
+      <input id="name" type="text" placeholder="Your Name" />
+      <input id="mobile" type="tel" placeholder="Mobile Number" />
     </div>
 
+    <!-- ORDER TYPE -->
     <div class="section-box">
       <label><b>Order Type</b></label>
       <select id="orderType" onchange="toggleAddress()">
         <option value="pickup">🏃 Pickup</option>
-        <option value="delivery">🛵 Delivery</option>
+        <option value="delivery">🛵 Home Delivery</option>
       </select>
 
-      <div id="addressBox">
-        <textarea id="address" placeholder="Delivery Address"></textarea>
+      <!-- ADDRESS -->
+      <div id="addressBox" style="display:none;margin-top:10px;">
+        <textarea id="address" placeholder="Enter delivery address"></textarea>
       </div>
     </div>
 
+    <!-- BRANCH -->
     <div class="section-box">
       <label><b>Select Branch</b></label>
       <select id="branch">
-        <option value="">-- Select --</option>
+        <option value="">-- Select Branch --</option>
         <option value="Kondhwa">Kondhwa</option>
         <option value="Mundwa">Mundwa</option>
         <option value="Ghorpadi">Ghorpadi</option>
@@ -51,38 +56,53 @@
       </select>
     </div>
 
+    <!-- ADD ITEMS -->
     <div class="section-box">
       <h4>Add Items</h4>
+
       <div class="item-row">
         <select id="item">
-          <option>Loading...</option>
+          <option value="">Loading paans...</option>
         </select>
-        <input type="number" id="qty" value="1" min="1">
-        <button onclick="addItem()">Add</button>
+
+        <input type="number" id="qty" value="1" min="1" />
+        <button type="button" onclick="addItem()">Add</button>
       </div>
 
+      <!-- CART -->
       <ul id="cart"></ul>
 
+      <!-- TOTAL -->
       <div id="totalBox">
         Total: ₹<span id="totalPrice">0</span>
       </div>
     </div>
 
-    <button class="submit-btn" onclick="bookNow()">Book Now</button>
+    <!-- BOOK NOW -->
+    <button type="button" class="submit-btn" onclick="bookNow()">
+      Book Now
+    </button>
+
   </div>
 </div>
 
-<!-- PAYMENT MODAL -->
+<!-- ================= PAYMENT POPUP ================= -->
+
 <div id="paymentModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closePaymentPopup()">×</span>
+
     <h3>💳 Payment Summary</h3>
 
     <div id="paymentSummary"></div>
 
-    <p><b>Total Amount:</b> ₹<span id="paymentTotal">0</span></p>
+    <p>
+      <b>Total Amount:</b> ₹<span id="paymentTotal">0</span>
+    </p>
 
-    <p>✔ Cash / UPI on Delivery</p>
+    <p style="font-size:13px;color:#555;">
+      Pay via UPI / Cash on Delivery
+    </p>
 
     <button class="pay-btn" onclick="confirmPayment()">
       Confirm Order
@@ -90,6 +110,8 @@
   </div>
 </div>
 
+<!-- JS -->
 <script src="app.js"></script>
+
 </body>
 </html>
