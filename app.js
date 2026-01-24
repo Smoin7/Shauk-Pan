@@ -1,193 +1,125 @@
 /************************************
- * GLOBAL CART & INVENTORY CONFIG
+ * GLOBAL CART & INVENTORY
  ************************************/
-
-// Object cart to block duplicate pan types
 const cart = {};
-
-// Dynamic price map (filled from Pan_Inventory API)
 const panPriceMap = {};
 
-// 🔗 Inventory API (n8n)
 const INVENTORY_API =
   "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
 
-
 /************************************
- * ORDER TYPE LOGIC
+ * ORDER TYPE
  ************************************/
 function toggleAddress() {
   const orderType = document.getElementById("orderType").value;
-  const addressBox = document.getElementById("addressBox");
-  const addressInput = document.getElementById("address");
-
-  if (orderType === "delivery") {
-    addressBox.style.display = "block";
-  } else {
-    addressBox.style.display = "none";
-    addressInput.value = "";
-  }
+  document.getElementById("addressBox").style.display =
+    orderType === "delivery" ? "block" : "none";
 }
 
-
 /************************************
- * LOAD PAN INVENTORY (NEW)
+ * LOAD INVENTORY
  ************************************/
 function loadPanInventory() {
   const select = document.getElementById("item");
-
-  select.innerHTML = `<option value="">Loading Paans...</option>`;
-
   fetch(INVENTORY_API)
-    .then(res => {
-      if (!res.ok) throw new Error("Inventory API failed");
-      return res.json();
-    })
+    .then(res => res.json())
     .then(data => {
       select.innerHTML = `<option value="">-- Select Paan --</option>`;
-
-      if (!data.pans || data.pans.length === 0) {
-        select.innerHTML = `<option value="">No Paans available</option>`;
-        return;
-      }
-
       data.pans.forEach(pan => {
         panPriceMap[pan.name] = pan.price;
-
         const opt = document.createElement("option");
         opt.value = pan.name;
         opt.textContent = `${pan.name} (₹${pan.price})`;
         select.appendChild(opt);
       });
-    })
-    .catch(err => {
-      console.error("Failed to load pan inventory:", err);
-      select.innerHTML = `<option value="">Unable to load Paans</option>`;
-      alert("⚠ Unable to load pan list. Please refresh.");
     });
 }
-
-
-/************************************
- * PAGE LOAD INIT
- ************************************/
-document.addEventListener("DOMContentLoaded", () => {
-  toggleAddress();
-  loadPanInventory();
-});
-
 
 /************************************
  * ADD ITEM
  ************************************/
 function addItem() {
-  const panType = document.getElementById("item").value;
-  const qty = parseInt(document.getElementById("qty").value, 10);
+  const pan = item.value;
+  const qty = +qtyInput.value || 1;
 
-  if (!panType) {
-    alert("Please select a Paan type");
-    return;
-  }
+  if (!pan) return alert("Select Paan");
+  if (cart[pan]) return alert("Already added");
 
-  if (!qty || qty <= 0) {
-    alert("Please enter a valid quantity");
-    return;
-  }
-
-  if (!panPriceMap[panType]) {
-    alert("Invalid Paan selected. Please refresh.");
-    return;
-  }
-
-  if (cart[panType]) {
-    alert(`${panType} already added. Remove it first to change quantity.`);
-    return;
-  }
-
-  cart[panType] = {
-    qty: qty,
-    price: panPriceMap[panType]
-  };
-
+  cart[pan] = { qty, price: panPriceMap[pan] };
   renderCart();
 }
 
-
 /************************************
- * RENDER CART + TOTAL
+ * RENDER CART
  ************************************/
 function renderCart() {
-  const ul = document.getElementById("cart");
-  const totalEl = document.getElementById("totalPrice");
-
-  ul.innerHTML = "";
+  cartList.innerHTML = "";
   let total = 0;
 
-  Object.entries(cart).forEach(([pan, data]) => {
-    const lineTotal = data.qty * data.price;
-    total += lineTotal;
-
-    const li = document.createElement("li");
-    li.innerHTML = `
-      ${pan} × ${data.qty} = ₹${lineTotal}
-      <button
-        type="button"
-        onclick="removeItem('${pan}')"
-        style="
-          margin-left:10px;
-          background:none;
-          border:none;
-          color:red;
-          font-size:16px;
-          cursor:pointer;
-        "
-      >✖</button>
-    `;
-    ul.appendChild(li);
+  Object.entries(cart).forEach(([pan, d]) => {
+    total += d.qty * d.price;
+    cartList.innerHTML += `
+      <li>${pan} × ${d.qty} = ₹${d.qty * d.price}
+      <button onclick="removeItem('${pan}')">✖</button></li>`;
   });
 
-  totalEl.innerText = total;
+  totalPrice.innerText = total;
 }
 
-
-/************************************
- * REMOVE ITEM
- ************************************/
-function removeItem(panType) {
-  delete cart[panType];
+function removeItem(pan) {
+  delete cart[pan];
   renderCart();
 }
 
+/************************************
+ * BOOK NOW → POPUP
+ ************************************/
+function bookNow() {
+  if (!Object.keys(cart).length)
+    return alert("Add items first");
+
+  let html = "<ul>";
+  let total = 0;
+
+  Object.entries(cart).forEach(([p, d]) => {
+    total += d.qty * d.price;
+    html += `<li>${p} × ${d.qty} = ₹${d.qty * d.price}</li>`;
+  });
+
+  html += "</ul>";
+
+  paymentSummary.innerHTML = html;
+  paymentTotal.innerText = total;
+
+  paymentModal.style.display = "block";
+}
+
+function closePaymentPopup() {
+  paymentModal.style.display = "none";
+}
 
 /************************************
- * SUBMIT ORDER (UNCHANGED)
+ * CONFIRM PAYMENT → SUBMIT
+ ************************************/
+function confirmPayment() {
+  closePaymentPopup();
+  submitOrder();
+}
+
+/************************************
+ * SUBMIT ORDER (n8n)
  ************************************/
 function submitOrder() {
-  if (Object.keys(cart).length === 0) {
-    alert("Please add at least one Paan");
-    return;
-  }
-
-  const orderType = document.getElementById("orderType").value;
-  const address = document.getElementById("address").value;
-
-  if (orderType === "delivery" && !address.trim()) {
-    alert("Please enter delivery address");
-    return;
-  }
-
-  const items = Object.entries(cart).map(([pan, data]) => ({
-    item: pan,
-    qty: data.qty
-  }));
-
   const payload = {
-    name: document.getElementById("name").value,
-    mobile: document.getElementById("mobile").value,
-    orderType: orderType,
-    address: orderType === "delivery" ? address : "",
-    branch: document.getElementById("branch").value,
-    items: items
+    name: name.value,
+    mobile: mobile.value,
+    orderType: orderType.value,
+    address: address.value,
+    branch: branch.value,
+    items: Object.entries(cart).map(([p, d]) => ({
+      item: p,
+      qty: d.qty
+    }))
   };
 
   fetch("https://shaikh98.app.n8n.cloud/webhook/paan-order", {
@@ -202,69 +134,13 @@ function submitOrder() {
     .catch(() => alert("❌ Order Failed"));
 }
 
-
 /************************************
- * BOOK NOW (SAVE → PAYMENT PAGE)
+ * INIT
  ************************************/
-function bookNow() {
-  const name = document.getElementById("name").value.trim();
-  const mobile = document.getElementById("mobile").value.trim();
-  const orderType = document.getElementById("orderType").value;
-  const address = document.getElementById("address").value.trim();
-  const branch = document.getElementById("branch").value;
-
-  if (!name) {
-    alert("Please enter your name");
-    return;
-  }
-
-  if (!/^\d{10}$/.test(mobile)) {
-    alert("Please enter a valid 10-digit mobile number");
-    return;
-  }
-
-  if (!branch) {
-    alert("Please select a branch");
-    return;
-  }
-
-  if (orderType === "delivery" && !address) {
-    alert("Please enter delivery address");
-    return;
-  }
-
-  const totalAmount = parseInt(
-    document.getElementById("totalPrice").innerText,
-    10
-  );
-
-  if (!totalAmount || totalAmount <= 0) {
-    alert("Please add at least one Paan using the Add button");
-    return;
-  }
-
-  const items = Object.entries(cart).map(([pan, data]) => ({
-    item: pan,
-    qty: data.qty,
-    price: data.price,
-    lineTotal: data.qty * data.price
-  }));
-
-  // ✅ SAVE ORDER FOR PAYMENT PAGE
-  const pendingOrder = {
-    name: name,
-    mobile: mobile,
-    orderType: orderType,
-    address: orderType === "delivery" ? address : "",
-    branch: branch,
-    items: items
-  };
-
-  localStorage.setItem(
-    "shaukPaanPendingOrder",
-    JSON.stringify(pendingOrder)
-  );
-
-  // ✅ Redirect to payment page
-  window.location.href = "payment.html";
-}
+document.addEventListener("DOMContentLoaded", () => {
+  window.cartList = document.getElementById("cart");
+  window.totalPrice = document.getElementById("totalPrice");
+  window.qtyInput = document.getElementById("qty");
+  toggleAddress();
+  loadPanInventory();
+});
