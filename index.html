@@ -34,7 +34,8 @@
         <option value="delivery">🛵 Delivery</option>
       </select>
 
-      <div id="addressBox">
+      <!-- UPDATED: hidden by default -->
+      <div id="addressBox" style="display:none;">
         <textarea id="address" placeholder="Delivery Address"></textarea>
       </div>
     </div>
@@ -76,11 +77,14 @@
 
     <h3>💳 Payment Summary</h3>
 
+    <!-- JS injects item + delivery breakdown here -->
     <div id="paymentSummary"></div>
 
-    <p>
-      <b>Total Amount (Final):</b> ₹<span id="paymentTotal">--</span>
-    </p>
+    <!-- UPDATED: wrapper for emphasis -->
+    <div class="final-total-box">
+      <b>Total Amount (Final):</b>
+      ₹<span id="paymentTotal">--</span>
+    </div>
 
     <div class="payment-actions">
       <button class="cancel-btn" onclick="closePaymentPopup()">Cancel</button>
