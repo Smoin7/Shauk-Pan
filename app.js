@@ -1,43 +1,33 @@
 /************************************
- * GLOBAL CART & INVENTORY
+ * GLOBAL CART & CONFIG
  ************************************/
 const cart = {};
 const panPriceMap = {};
+const DELIVERY_CHARGE = 50;
 
-const INVENTORY_API =
-  "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
-
-const ORDER_API =
-  "https://shaikh98.app.n8n.cloud/webhook/paan-order";
+const INVENTORY_API = "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
+const ORDER_API = "https://shaikh98.app.n8n.cloud/webhook/paan-order";
 
 /************************************
- * DOM ELEMENT REFERENCES (SAFE)
+ * DOM REFERENCES
  ************************************/
-let itemSelect,
-  qtyInput,
-  cartList,
-  totalPriceEl,
-  paymentModal,
-  paymentSummary,
-  paymentTotal,
-  nameInput,
-  mobileInput,
-  orderTypeSelect,
-  addressInput,
-  branchSelect,
-  addressBox;
+let itemSelect, qtyInput, cartList, totalPriceEl;
+let paymentModal, paymentSummary, paymentTotal;
+let nameInput, mobileInput, orderTypeSelect, addressInput, branchSelect, addressBox;
 
 /************************************
- * INIT ON PAGE LOAD
+ * INIT
  ************************************/
 document.addEventListener("DOMContentLoaded", () => {
   itemSelect = document.getElementById("item");
   qtyInput = document.getElementById("qty");
   cartList = document.getElementById("cart");
   totalPriceEl = document.getElementById("totalPrice");
+
   paymentModal = document.getElementById("paymentModal");
   paymentSummary = document.getElementById("paymentSummary");
   paymentTotal = document.getElementById("paymentTotal");
+
   nameInput = document.getElementById("name");
   mobileInput = document.getElementById("mobile");
   orderTypeSelect = document.getElementById("orderType");
@@ -50,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /************************************
- * ORDER TYPE LOGIC
+ * ORDER TYPE
  ************************************/
 function toggleAddress() {
   addressBox.style.display =
@@ -58,33 +48,18 @@ function toggleAddress() {
 }
 
 /************************************
- * LOAD PAN INVENTORY
+ * LOAD INVENTORY
  ************************************/
 function loadPanInventory() {
-  itemSelect.innerHTML = `<option value="">Loading Paans...</option>`;
-
   fetch(INVENTORY_API)
     .then(res => res.json())
     .then(data => {
       itemSelect.innerHTML = `<option value="">-- Select Paan --</option>`;
-
-      if (!data.pans || data.pans.length === 0) {
-        itemSelect.innerHTML =
-          `<option value="">No Paans Available</option>`;
-        return;
-      }
-
-      data.pans.forEach(pan => {
-        panPriceMap[pan.name] = pan.price;
-
-        const opt = document.createElement("option");
-        opt.value = pan.name;
-        opt.textContent = `${pan.name} (₹${pan.price})`;
-        itemSelect.appendChild(opt);
+      data.pans.forEach(p => {
+        panPriceMap[p.name] = p.price;
+        itemSelect.innerHTML +=
+          `<option value="${p.name}">${p.name} (₹${p.price})</option>`;
       });
-    })
-    .catch(() => {
-      alert("❌ Failed to load paan inventory");
     });
 }
 
@@ -95,47 +70,30 @@ function addItem() {
   const pan = itemSelect.value;
   const qty = parseInt(qtyInput.value, 10);
 
-  if (!pan) return alert("Please select a Paan");
-  if (!qty || qty <= 0) return alert("Enter valid quantity");
-  if (cart[pan]) return alert("This Paan is already added");
+  if (!pan || qty <= 0) return alert("Select valid paan & quantity");
+  if (cart[pan]) return alert("Already added");
 
-  cart[pan] = {
-    qty,
-    price: panPriceMap[pan]
-  };
-
+  cart[pan] = { qty, price: panPriceMap[pan] };
   renderCart();
 }
 
 /************************************
- * RENDER CART + TOTAL
+ * RENDER CART
  ************************************/
 function renderCart() {
   cartList.innerHTML = "";
-  let total = 0;
+  let itemsTotal = 0;
 
-  Object.entries(cart).forEach(([pan, data]) => {
-    const lineTotal = data.qty * data.price;
-    total += lineTotal;
-
-    const li = document.createElement("li");
-    li.innerHTML = `
-      ${pan} × ${data.qty} = ₹${lineTotal}
-      <button
-        type="button"
-        onclick="removeItem('${pan}')"
-        style="
-          margin-left:8px;
-          background:none;
-          border:none;
-          cursor:pointer;
-        "
-      >✖</button>
-    `;
-    cartList.appendChild(li);
+  Object.entries(cart).forEach(([p, d]) => {
+    const line = d.qty * d.price;
+    itemsTotal += line;
+    cartList.innerHTML += `
+      <li>${p} × ${d.qty} = ₹${line}
+        <button onclick="removeItem('${p}')">✖</button>
+      </li>`;
   });
 
-  totalPriceEl.innerText = total;
+  totalPriceEl.innerText = itemsTotal;
 }
 
 /************************************
@@ -147,64 +105,63 @@ function removeItem(pan) {
 }
 
 /************************************
- * BOOK NOW → OPEN PAYMENT POPUP
+ * BOOK NOW → SHOW POPUP
  ************************************/
 function bookNow() {
-  if (!nameInput.value.trim())
-    return alert("Please enter your name");
+  if (!Object.keys(cart).length) return alert("Add items first");
 
-  if (!/^\d{10}$/.test(mobileInput.value.trim()))
-    return alert("Enter valid 10-digit mobile number");
+  let html = "<ul>";
+  let itemsTotal = 0;
 
-  if (!branchSelect.value)
-    return alert("Please select a branch");
-
-  if (
-    orderTypeSelect.value === "delivery" &&
-    !addressInput.value.trim()
-  )
-    return alert("Please enter delivery address");
-
-  if (Object.keys(cart).length === 0)
-    return alert("Please add at least one Paan");
-
-  let summaryHTML = "<ul>";
-  let total = 0;
-
-  Object.entries(cart).forEach(([pan, data]) => {
-    const line = data.qty * data.price;
-    total += line;
-    summaryHTML +=
-      `<li>${pan} × ${data.qty} = ₹${line}</li>`;
+  Object.entries(cart).forEach(([p, d]) => {
+    const line = d.qty * d.price;
+    itemsTotal += line;
+    html += `<li>${p} × ${d.qty} = ₹${line}</li>`;
   });
 
-  summaryHTML += "</ul>";
+  html += "</ul>";
 
-  paymentSummary.innerHTML = summaryHTML;
-  paymentTotal.innerText = total;
+  let finalTotal = itemsTotal;
+  if (orderTypeSelect.value === "delivery") {
+    html += `<p><b>Delivery Charge:</b> ₹${DELIVERY_CHARGE}</p>`;
+    finalTotal += DELIVERY_CHARGE;
+  }
+
+  paymentSummary.innerHTML = html;
+  paymentTotal.innerText = finalTotal;
 
   paymentModal.style.display = "block";
 }
 
 /************************************
- * CLOSE PAYMENT POPUP
+ * CLOSE POPUP
  ************************************/
 function closePaymentPopup() {
   paymentModal.style.display = "none";
 }
 
 /************************************
- * CONFIRM PAYMENT → SUBMIT ORDER
+ * CONFIRM PAYMENT
  ************************************/
 function confirmPayment() {
-  closePaymentPopup();
   submitOrder();
 }
 
 /************************************
- * SUBMIT ORDER TO n8n
+ * SUBMIT ORDER → SEND TOTAL TO WEBHOOK
  ************************************/
 function submitOrder() {
+  let itemsTotal = 0;
+
+  Object.values(cart).forEach(d => {
+    itemsTotal += d.qty * d.price;
+  });
+
+  const deliveryCharge =
+    orderTypeSelect.value === "delivery" ? DELIVERY_CHARGE : 0;
+
+  const finalTotal = itemsTotal + deliveryCharge;
+
   const payload = {
     name: nameInput.value.trim(),
     mobile: mobileInput.value.trim(),
@@ -214,10 +171,17 @@ function submitOrder() {
         ? addressInput.value.trim()
         : "",
     branch: branchSelect.value,
-    items: Object.entries(cart).map(([pan, data]) => ({
-      item: pan,
-      qty: data.qty
-    }))
+
+    items: Object.entries(cart).map(([p, d]) => ({
+      item: p,
+      qty: d.qty,
+      price: d.price,
+      lineTotal: d.qty * d.price
+    })),
+
+    itemsTotal: itemsTotal,
+    deliveryCharge: deliveryCharge,
+    totalAmount: finalTotal   // ✅ THIS GOES TO n8n
   };
 
   fetch(ORDER_API, {
@@ -225,11 +189,12 @@ function submitOrder() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   })
-    .then(() => {
-      alert("✅ Order placed successfully!");
+    .then(res => res.json())
+    .then(data => {
+      alert(
+        `✅ Order Confirmed\nOrder ID: ${data.orderId}\nTotal: ₹${data.totalAmount}`
+      );
       location.reload();
     })
-    .catch(() => {
-      alert("❌ Order failed. Please try again.");
-    });
+    .catch(() => alert("❌ Order Failed"));
 }
