@@ -91,10 +91,19 @@
     Cancel
   </button>
 
-  <a id="upiPayBtn" class="pay-btn" href="#">
-    Pay via UPI
-  </a>
+  <button class="pay-btn half-pay-btn" onclick="payUpi(50)">
+    Pay 50%
+  </button>
+
+  <button class="pay-btn full-pay-btn" onclick="payUpi(100)">
+    Pay Full
+  </button>
 </div>
+
+<p class="upi-hint">
+  Opens PhonePe / GPay / Paytm
+</p>
+
 
 <p class="upi-hint">
   You will be redirected to PhonePe / GPay / Paytm
