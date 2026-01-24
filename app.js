@@ -1,33 +1,47 @@
 /************************************
- * GLOBAL CART & CONFIG
+ * GLOBAL CART & INVENTORY
  ************************************/
 const cart = {};
 const panPriceMap = {};
+
+// ✅ ADDED
 const DELIVERY_CHARGE = 50;
+let finalDeliveryCharge = 0;
 
-const INVENTORY_API = "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
-const ORDER_API = "https://shaikh98.app.n8n.cloud/webhook/paan-order";
+const INVENTORY_API =
+  "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
+
+const ORDER_API =
+  "https://shaikh98.app.n8n.cloud/webhook/paan-order";
 
 /************************************
- * DOM REFERENCES
+ * DOM ELEMENT REFERENCES (SAFE)
  ************************************/
-let itemSelect, qtyInput, cartList, totalPriceEl;
-let paymentModal, paymentSummary, paymentTotal;
-let nameInput, mobileInput, orderTypeSelect, addressInput, branchSelect, addressBox;
+let itemSelect,
+  qtyInput,
+  cartList,
+  totalPriceEl,
+  paymentModal,
+  paymentSummary,
+  paymentTotal,
+  nameInput,
+  mobileInput,
+  orderTypeSelect,
+  addressInput,
+  branchSelect,
+  addressBox;
 
 /************************************
- * INIT
+ * INIT ON PAGE LOAD
  ************************************/
 document.addEventListener("DOMContentLoaded", () => {
   itemSelect = document.getElementById("item");
   qtyInput = document.getElementById("qty");
   cartList = document.getElementById("cart");
   totalPriceEl = document.getElementById("totalPrice");
-
   paymentModal = document.getElementById("paymentModal");
   paymentSummary = document.getElementById("paymentSummary");
   paymentTotal = document.getElementById("paymentTotal");
-
   nameInput = document.getElementById("name");
   mobileInput = document.getElementById("mobile");
   orderTypeSelect = document.getElementById("orderType");
@@ -40,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /************************************
- * ORDER TYPE
+ * ORDER TYPE LOGIC
  ************************************/
 function toggleAddress() {
   addressBox.style.display =
@@ -48,18 +62,33 @@ function toggleAddress() {
 }
 
 /************************************
- * LOAD INVENTORY
+ * LOAD PAN INVENTORY
  ************************************/
 function loadPanInventory() {
+  itemSelect.innerHTML = `<option value="">Loading Paans...</option>`;
+
   fetch(INVENTORY_API)
     .then(res => res.json())
     .then(data => {
       itemSelect.innerHTML = `<option value="">-- Select Paan --</option>`;
-      data.pans.forEach(p => {
-        panPriceMap[p.name] = p.price;
-        itemSelect.innerHTML +=
-          `<option value="${p.name}">${p.name} (₹${p.price})</option>`;
+
+      if (!data.pans || data.pans.length === 0) {
+        itemSelect.innerHTML =
+          `<option value="">No Paans Available</option>`;
+        return;
+      }
+
+      data.pans.forEach(pan => {
+        panPriceMap[pan.name] = pan.price;
+
+        const opt = document.createElement("option");
+        opt.value = pan.name;
+        opt.textContent = `${pan.name} (₹${pan.price})`;
+        itemSelect.appendChild(opt);
       });
+    })
+    .catch(() => {
+      alert("❌ Failed to load paan inventory");
     });
 }
 
@@ -70,30 +99,47 @@ function addItem() {
   const pan = itemSelect.value;
   const qty = parseInt(qtyInput.value, 10);
 
-  if (!pan || qty <= 0) return alert("Select valid paan & quantity");
-  if (cart[pan]) return alert("Already added");
+  if (!pan) return alert("Please select a Paan");
+  if (!qty || qty <= 0) return alert("Enter valid quantity");
+  if (cart[pan]) return alert("This Paan is already added");
 
-  cart[pan] = { qty, price: panPriceMap[pan] };
+  cart[pan] = {
+    qty,
+    price: panPriceMap[pan]
+  };
+
   renderCart();
 }
 
 /************************************
- * RENDER CART
+ * RENDER CART + TOTAL
  ************************************/
 function renderCart() {
   cartList.innerHTML = "";
-  let itemsTotal = 0;
+  let total = 0;
 
-  Object.entries(cart).forEach(([p, d]) => {
-    const line = d.qty * d.price;
-    itemsTotal += line;
-    cartList.innerHTML += `
-      <li>${p} × ${d.qty} = ₹${line}
-        <button onclick="removeItem('${p}')">✖</button>
-      </li>`;
+  Object.entries(cart).forEach(([pan, data]) => {
+    const lineTotal = data.qty * data.price;
+    total += lineTotal;
+
+    const li = document.createElement("li");
+    li.innerHTML = `
+      ${pan} × ${data.qty} = ₹${lineTotal}
+      <button
+        type="button"
+        onclick="removeItem('${pan}')"
+        style="
+          margin-left:8px;
+          background:none;
+          border:none;
+          cursor:pointer;
+        "
+      >✖</button>
+    `;
+    cartList.appendChild(li);
   });
 
-  totalPriceEl.innerText = itemsTotal;
+  totalPriceEl.innerText = total;
 }
 
 /************************************
@@ -105,62 +151,80 @@ function removeItem(pan) {
 }
 
 /************************************
- * BOOK NOW → SHOW POPUP
+ * BOOK NOW → OPEN PAYMENT POPUP
  ************************************/
 function bookNow() {
-  if (!Object.keys(cart).length) return alert("Add items first");
+  if (!nameInput.value.trim())
+    return alert("Please enter your name");
 
-  let html = "<ul>";
-  let itemsTotal = 0;
+  if (!/^\d{10}$/.test(mobileInput.value.trim()))
+    return alert("Enter valid 10-digit mobile number");
 
-  Object.entries(cart).forEach(([p, d]) => {
-    const line = d.qty * d.price;
-    itemsTotal += line;
-    html += `<li>${p} × ${d.qty} = ₹${line}</li>`;
+  if (!branchSelect.value)
+    return alert("Please select a branch");
+
+  if (
+    orderTypeSelect.value === "delivery" &&
+    !addressInput.value.trim()
+  )
+    return alert("Please enter delivery address");
+
+  if (Object.keys(cart).length === 0)
+    return alert("Please add at least one Paan");
+
+  let summaryHTML = "<ul>";
+  let total = 0;
+
+  Object.entries(cart).forEach(([pan, data]) => {
+    const line = data.qty * data.price;
+    total += line;
+    summaryHTML +=
+      `<li>${pan} × ${data.qty} = ₹${line}</li>`;
   });
 
-  html += "</ul>";
+  summaryHTML += "</ul>";
 
-  let finalTotal = itemsTotal;
-  if (orderTypeSelect.value === "delivery") {
-    html += `<p><b>Delivery Charge:</b> ₹${DELIVERY_CHARGE}</p>`;
-    finalTotal += DELIVERY_CHARGE;
+  // ✅ ADDED: lock delivery charge here
+  finalDeliveryCharge =
+    orderTypeSelect.value === "delivery" ? DELIVERY_CHARGE : 0;
+
+  if (finalDeliveryCharge > 0) {
+    summaryHTML +=
+      `<p><b>Delivery Charge:</b> ₹${finalDeliveryCharge}</p>`;
   }
 
-  paymentSummary.innerHTML = html;
-  paymentTotal.innerText = finalTotal;
+  paymentSummary.innerHTML = summaryHTML;
+  paymentTotal.innerText = total + finalDeliveryCharge;
 
   paymentModal.style.display = "block";
 }
 
 /************************************
- * CLOSE POPUP
+ * CLOSE PAYMENT POPUP
  ************************************/
 function closePaymentPopup() {
   paymentModal.style.display = "none";
 }
 
 /************************************
- * CONFIRM PAYMENT
+ * CONFIRM PAYMENT → SUBMIT ORDER
  ************************************/
 function confirmPayment() {
+  closePaymentPopup();
   submitOrder();
 }
 
 /************************************
- * SUBMIT ORDER → SEND TOTAL TO WEBHOOK
+ * SUBMIT ORDER TO n8n
  ************************************/
 function submitOrder() {
   let itemsTotal = 0;
 
-  Object.values(cart).forEach(d => {
-    itemsTotal += d.qty * d.price;
+  Object.values(cart).forEach(data => {
+    itemsTotal += data.qty * data.price;
   });
 
-  const deliveryCharge =
-    orderTypeSelect.value === "delivery" ? DELIVERY_CHARGE : 0;
-
-  const finalTotal = itemsTotal + deliveryCharge;
+  const totalAmount = itemsTotal + finalDeliveryCharge;
 
   const payload = {
     name: nameInput.value.trim(),
@@ -172,16 +236,17 @@ function submitOrder() {
         : "",
     branch: branchSelect.value,
 
-    items: Object.entries(cart).map(([p, d]) => ({
-      item: p,
-      qty: d.qty,
-      price: d.price,
-      lineTotal: d.qty * d.price
+    items: Object.entries(cart).map(([pan, data]) => ({
+      item: pan,
+      qty: data.qty,
+      price: data.price,
+      lineTotal: data.qty * data.price
     })),
 
+    // ✅ ADDED FIELDS FOR n8n
     itemsTotal: itemsTotal,
-    deliveryCharge: deliveryCharge,
-    totalAmount: finalTotal   // ✅ THIS GOES TO n8n
+    deliveryCharge: finalDeliveryCharge,
+    totalAmount: totalAmount
   };
 
   fetch(ORDER_API, {
@@ -189,12 +254,11 @@ function submitOrder() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   })
-    .then(res => res.json())
-    .then(data => {
-      alert(
-        `✅ Order Confirmed\nOrder ID: ${data.orderId}\nTotal: ₹${data.totalAmount}`
-      );
+    .then(() => {
+      alert("✅ Order placed successfully!");
       location.reload();
     })
-    .catch(() => alert("❌ Order Failed"));
+    .catch(() => {
+      alert("❌ Order failed. Please try again.");
+    });
 }
