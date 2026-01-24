@@ -7,31 +7,84 @@ const panPriceMap = {};
 const INVENTORY_API =
   "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
 
+const ORDER_API =
+  "https://shaikh98.app.n8n.cloud/webhook/paan-order";
+
 /************************************
- * ORDER TYPE
+ * DOM ELEMENT REFERENCES (SAFE)
+ ************************************/
+let itemSelect,
+  qtyInput,
+  cartList,
+  totalPriceEl,
+  paymentModal,
+  paymentSummary,
+  paymentTotal,
+  nameInput,
+  mobileInput,
+  orderTypeSelect,
+  addressInput,
+  branchSelect,
+  addressBox;
+
+/************************************
+ * INIT ON PAGE LOAD
+ ************************************/
+document.addEventListener("DOMContentLoaded", () => {
+  itemSelect = document.getElementById("item");
+  qtyInput = document.getElementById("qty");
+  cartList = document.getElementById("cart");
+  totalPriceEl = document.getElementById("totalPrice");
+  paymentModal = document.getElementById("paymentModal");
+  paymentSummary = document.getElementById("paymentSummary");
+  paymentTotal = document.getElementById("paymentTotal");
+  nameInput = document.getElementById("name");
+  mobileInput = document.getElementById("mobile");
+  orderTypeSelect = document.getElementById("orderType");
+  addressInput = document.getElementById("address");
+  branchSelect = document.getElementById("branch");
+  addressBox = document.getElementById("addressBox");
+
+  toggleAddress();
+  loadPanInventory();
+});
+
+/************************************
+ * ORDER TYPE LOGIC
  ************************************/
 function toggleAddress() {
-  const orderType = document.getElementById("orderType").value;
-  document.getElementById("addressBox").style.display =
-    orderType === "delivery" ? "block" : "none";
+  addressBox.style.display =
+    orderTypeSelect.value === "delivery" ? "block" : "none";
 }
 
 /************************************
- * LOAD INVENTORY
+ * LOAD PAN INVENTORY
  ************************************/
 function loadPanInventory() {
-  const select = document.getElementById("item");
+  itemSelect.innerHTML = `<option value="">Loading Paans...</option>`;
+
   fetch(INVENTORY_API)
     .then(res => res.json())
     .then(data => {
-      select.innerHTML = `<option value="">-- Select Paan --</option>`;
+      itemSelect.innerHTML = `<option value="">-- Select Paan --</option>`;
+
+      if (!data.pans || data.pans.length === 0) {
+        itemSelect.innerHTML =
+          `<option value="">No Paans Available</option>`;
+        return;
+      }
+
       data.pans.forEach(pan => {
         panPriceMap[pan.name] = pan.price;
+
         const opt = document.createElement("option");
         opt.value = pan.name;
         opt.textContent = `${pan.name} (₹${pan.price})`;
-        select.appendChild(opt);
+        itemSelect.appendChild(opt);
       });
+    })
+    .catch(() => {
+      alert("❌ Failed to load paan inventory");
     });
 }
 
@@ -39,67 +92,109 @@ function loadPanInventory() {
  * ADD ITEM
  ************************************/
 function addItem() {
-  const pan = item.value;
-  const qty = +qtyInput.value || 1;
+  const pan = itemSelect.value;
+  const qty = parseInt(qtyInput.value, 10);
 
-  if (!pan) return alert("Select Paan");
-  if (cart[pan]) return alert("Already added");
+  if (!pan) return alert("Please select a Paan");
+  if (!qty || qty <= 0) return alert("Enter valid quantity");
+  if (cart[pan]) return alert("This Paan is already added");
 
-  cart[pan] = { qty, price: panPriceMap[pan] };
+  cart[pan] = {
+    qty,
+    price: panPriceMap[pan]
+  };
+
   renderCart();
 }
 
 /************************************
- * RENDER CART
+ * RENDER CART + TOTAL
  ************************************/
 function renderCart() {
   cartList.innerHTML = "";
   let total = 0;
 
-  Object.entries(cart).forEach(([pan, d]) => {
-    total += d.qty * d.price;
-    cartList.innerHTML += `
-      <li>${pan} × ${d.qty} = ₹${d.qty * d.price}
-      <button onclick="removeItem('${pan}')">✖</button></li>`;
+  Object.entries(cart).forEach(([pan, data]) => {
+    const lineTotal = data.qty * data.price;
+    total += lineTotal;
+
+    const li = document.createElement("li");
+    li.innerHTML = `
+      ${pan} × ${data.qty} = ₹${lineTotal}
+      <button
+        type="button"
+        onclick="removeItem('${pan}')"
+        style="
+          margin-left:8px;
+          background:none;
+          border:none;
+          cursor:pointer;
+        "
+      >✖</button>
+    `;
+    cartList.appendChild(li);
   });
 
-  totalPrice.innerText = total;
+  totalPriceEl.innerText = total;
 }
 
+/************************************
+ * REMOVE ITEM
+ ************************************/
 function removeItem(pan) {
   delete cart[pan];
   renderCart();
 }
 
 /************************************
- * BOOK NOW → POPUP
+ * BOOK NOW → OPEN PAYMENT POPUP
  ************************************/
 function bookNow() {
-  if (!Object.keys(cart).length)
-    return alert("Add items first");
+  if (!nameInput.value.trim())
+    return alert("Please enter your name");
 
-  let html = "<ul>";
+  if (!/^\d{10}$/.test(mobileInput.value.trim()))
+    return alert("Enter valid 10-digit mobile number");
+
+  if (!branchSelect.value)
+    return alert("Please select a branch");
+
+  if (
+    orderTypeSelect.value === "delivery" &&
+    !addressInput.value.trim()
+  )
+    return alert("Please enter delivery address");
+
+  if (Object.keys(cart).length === 0)
+    return alert("Please add at least one Paan");
+
+  let summaryHTML = "<ul>";
   let total = 0;
 
-  Object.entries(cart).forEach(([p, d]) => {
-    total += d.qty * d.price;
-    html += `<li>${p} × ${d.qty} = ₹${d.qty * d.price}</li>`;
+  Object.entries(cart).forEach(([pan, data]) => {
+    const line = data.qty * data.price;
+    total += line;
+    summaryHTML +=
+      `<li>${pan} × ${data.qty} = ₹${line}</li>`;
   });
 
-  html += "</ul>";
+  summaryHTML += "</ul>";
 
-  paymentSummary.innerHTML = html;
+  paymentSummary.innerHTML = summaryHTML;
   paymentTotal.innerText = total;
 
   paymentModal.style.display = "block";
 }
 
+/************************************
+ * CLOSE PAYMENT POPUP
+ ************************************/
 function closePaymentPopup() {
   paymentModal.style.display = "none";
 }
 
 /************************************
- * CONFIRM PAYMENT → SUBMIT
+ * CONFIRM PAYMENT → SUBMIT ORDER
  ************************************/
 function confirmPayment() {
   closePaymentPopup();
@@ -107,40 +202,34 @@ function confirmPayment() {
 }
 
 /************************************
- * SUBMIT ORDER (n8n)
+ * SUBMIT ORDER TO n8n
  ************************************/
 function submitOrder() {
   const payload = {
-    name: name.value,
-    mobile: mobile.value,
-    orderType: orderType.value,
-    address: address.value,
-    branch: branch.value,
-    items: Object.entries(cart).map(([p, d]) => ({
-      item: p,
-      qty: d.qty
+    name: nameInput.value.trim(),
+    mobile: mobileInput.value.trim(),
+    orderType: orderTypeSelect.value,
+    address:
+      orderTypeSelect.value === "delivery"
+        ? addressInput.value.trim()
+        : "",
+    branch: branchSelect.value,
+    items: Object.entries(cart).map(([pan, data]) => ({
+      item: pan,
+      qty: data.qty
     }))
   };
 
-  fetch("https://shaikh98.app.n8n.cloud/webhook/paan-order", {
+  fetch(ORDER_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   })
     .then(() => {
-      alert("✅ Order Successful!");
+      alert("✅ Order placed successfully!");
       location.reload();
     })
-    .catch(() => alert("❌ Order Failed"));
+    .catch(() => {
+      alert("❌ Order failed. Please try again.");
+    });
 }
-
-/************************************
- * INIT
- ************************************/
-document.addEventListener("DOMContentLoaded", () => {
-  window.cartList = document.getElementById("cart");
-  window.totalPrice = document.getElementById("totalPrice");
-  window.qtyInput = document.getElementById("qty");
-  toggleAddress();
-  loadPanInventory();
-});
