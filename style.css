@@ -70,6 +70,22 @@ input, select, textarea {
   border-radius: 8px;
 }
 
+/* UPDATED: cart remove (✖) visibility */
+#cart li button {
+  background: none;
+  border: none;
+  color: #b12a2a;
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+#cart li button:hover {
+  color: #ff0000;
+}
+
+/* TOTAL BOX */
 #totalBox {
   border: 1px dashed #ddd;
   padding: 12px;
@@ -112,6 +128,26 @@ input, select, textarea {
   cursor: pointer;
 }
 
+/* UPDATED: payment summary clarity */
+#paymentSummary ul {
+  padding-left: 18px;
+  margin: 10px 0;
+}
+
+#paymentSummary p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+/* UPDATED: final total emphasis */
+.final-total-box {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #ddd;
+  font-size: 16px;
+  text-align: right;
+}
+
 .payment-actions {
   display: flex;
   gap: 12px;
@@ -121,7 +157,7 @@ input, select, textarea {
 .cancel-btn {
   flex: 1;
   background: #e5e5e5;
-  border: none;
+  border: 1px solid #ccc;
   padding: 14px;
   border-radius: 12px;
 }
