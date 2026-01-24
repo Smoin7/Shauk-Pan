@@ -9,297 +9,138 @@ body {
   padding: 20px;
 }
 
-/********************************
- * MAIN CONTAINER
- ********************************/
+/* CONTAINER */
 .container {
   max-width: 1000px;
   margin: auto;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   display: flex;
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-/********************************
- * LEFT LOGO SECTION
- ********************************/
+/* LEFT */
 .logo-section {
-  background: linear-gradient(135deg, #7b1e1e, #b12a2a);
-  color: white;
   width: 35%;
-  padding: 40px 30px;
+  background: linear-gradient(135deg,#7b1e1e,#b12a2a);
+  color: white;
   text-align: center;
+  padding: 40px 30px;
 }
 
 .logo-section img {
-  max-width: 180px;
+  max-width: 160px;
   border-radius: 12px;
-  margin-bottom: 20px;
 }
 
-.logo-section h2 {
-  margin: 10px 0 5px;
-}
-
-.logo-section p {
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-/********************************
- * RIGHT FORM SECTION
- ********************************/
+/* RIGHT */
 .form-section {
   width: 65%;
   padding: 40px;
 }
 
-.form-section h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #7b1e1e;
-}
-
-/********************************
- * SECTION BOX
- ********************************/
 .section-box {
-  border: 1px solid #f0f0f0;
+  border: 1px solid #eee;
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 18px;
-  background: linear-gradient(to bottom, #ffffff, #fafafa);
 }
 
-/********************************
- * LABELS & TEXT
- ********************************/
-.form-section label b {
-  font-size: 14px;
-  color: #333;
-}
-
-.form-section p {
-  font-size: 12px;
-  color: #777;
-  margin: 4px 0 10px;
-}
-
-/********************************
- * INPUTS / SELECT / TEXTAREA
- ********************************/
-input,
-select,
-textarea {
+input, select, textarea {
   width: 100%;
-  padding: 12px 14px;
+  padding: 12px;
   margin-top: 6px;
   margin-bottom: 12px;
   border-radius: 8px;
-  border: 1px solid #dcdcdc;
-  font-size: 14px;
-  transition: all 0.25s ease;
-  background-color: #fff;
+  border: 1px solid #ccc;
 }
 
-textarea {
-  resize: none;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: #999;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: #1f8a70;
-  box-shadow: 0 0 0 3px rgba(31, 138, 112, 0.15);
-}
-
-/********************************
- * ITEM ROW
- ********************************/
 .item-row {
   display: grid;
   grid-template-columns: 1.4fr 0.6fr auto;
   gap: 10px;
-  align-items: center;
 }
 
 .item-row button {
   background: #7b1e1e;
   color: white;
   border: none;
-  padding: 10px 16px;
+  padding: 10px 14px;
   border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
 }
 
-.item-row button:hover {
-  background: #a80000;
-  transform: translateY(-1px);
-}
-
-/********************************
- * CART LIST
- ********************************/
-#cart {
-  margin: 12px 0;
-  padding-left: 18px;
-}
-
-#cart li {
-  margin-bottom: 6px;
-  font-size: 14px;
-}
-
-/********************************
- * TOTAL BOX
- ********************************/
 #totalBox {
-  background: linear-gradient(to right, #f9f9f9, #ffffff);
+  border: 1px dashed #ddd;
   padding: 12px;
   border-radius: 8px;
-  border: 1px dashed #ddd;
   text-align: right;
   font-weight: bold;
-  margin-top: 10px;
 }
 
-#totalBox span {
-  color: #1f8a70;
-  font-size: 20px;
-}
-
-/********************************
- * SUBMIT BUTTON
- ********************************/
 .submit-btn {
   width: 100%;
-  background: linear-gradient(135deg, #1f8a70, #2fbf9b);
-  color: white;
   padding: 14px;
   border-radius: 12px;
   border: none;
   font-size: 16px;
-  cursor: pointer;
-  margin-top: 20px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  background: linear-gradient(135deg,#1f8a70,#2fbf9b);
+  color: white;
 }
 
-.submit-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-}
-
-/********************************
- * 🔥 PAYMENT MODAL (IMPORTANT)
- ********************************/
+/* MODAL */
 .modal {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0,0,0,0.55);
   z-index: 9999;
-  backdrop-filter: blur(3px);
 }
 
 .modal-content {
-  background: #ffffff;
+  background: white;
   max-width: 420px;
   margin: 10% auto;
   padding: 24px;
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
-  animation: popupFade 0.25s ease;
-}
-
-@keyframes popupFade {
-  from {
-    opacity: 0;
-    transform: translateY(15px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.modal-content h3 {
-  margin-top: 0;
-  color: #7b1e1e;
-}
-
-.modal-content ul {
-  padding-left: 18px;
-  margin: 10px 0;
-}
-
-.modal-content li {
-  font-size: 14px;
-  margin-bottom: 6px;
 }
 
 .close {
   position: absolute;
   right: 18px;
-  top: 14px;
-  font-size: 22px;
+  top: 12px;
   cursor: pointer;
-  color: #999;
 }
 
-.close:hover {
-  color: #000;
+.payment-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
 }
 
-/********************************
- * CONFIRM PAYMENT BUTTON
- ********************************/
-.pay-btn {
-  width: 100%;
-  background: linear-gradient(135deg, #1f8a70, #2fbf9b);
-  color: white;
+.cancel-btn {
+  flex: 1;
+  background: #e5e5e5;
+  border: none;
   padding: 14px;
   border-radius: 12px;
+}
+
+.pay-btn {
+  flex: 1;
+  background: linear-gradient(135deg,#1f8a70,#2fbf9b);
+  color: white;
   border: none;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
 }
 
-.pay-btn:hover {
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-}
-
-/********************************
- * MOBILE RESPONSIVE
- ********************************/
+/* MOBILE */
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
   }
-
-  .logo-section,
-  .form-section {
+  .logo-section, .form-section {
     width: 100%;
-  }
-
-  .logo-section {
-    padding: 25px;
-  }
-
-  .form-section {
-    padding: 25px;
-  }
-
-  .modal-content {
-    margin: 20% 16px;
   }
 }
