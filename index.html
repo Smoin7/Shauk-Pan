@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <title>Shauk Paan Order</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -13,42 +11,38 @@
 
 <div class="container">
 
-  <!-- LEFT : LOGO -->
+  <!-- LEFT -->
   <div class="logo-section">
     <img src="logo.png" alt="Shauk Paan Logo" />
     <h2>Shauk Paan</h2>
     <p>Fresh • Hygienic • Authentic</p>
   </div>
 
-  <!-- RIGHT : ORDER FORM -->
+  <!-- RIGHT -->
   <div class="form-section">
     <h3>🍃 Place Your Order</h3>
 
-    <!-- CUSTOMER DETAILS -->
     <div class="section-box">
-      <input id="name" type="text" placeholder="Your Name" />
-      <input id="mobile" type="tel" placeholder="Mobile Number" />
+      <input id="name" placeholder="Your Name">
+      <input id="mobile" placeholder="Mobile Number">
     </div>
 
-    <!-- ORDER TYPE -->
     <div class="section-box">
       <label><b>Order Type</b></label>
       <select id="orderType" onchange="toggleAddress()">
         <option value="pickup">🏃 Pickup</option>
-        <option value="delivery">🛵 Home Delivery</option>
+        <option value="delivery">🛵 Delivery</option>
       </select>
 
-      <!-- ADDRESS -->
-      <div id="addressBox" style="display:none;margin-top:10px;">
-        <textarea id="address" placeholder="Enter delivery address"></textarea>
+      <div id="addressBox">
+        <textarea id="address" placeholder="Delivery Address"></textarea>
       </div>
     </div>
 
-    <!-- BRANCH -->
     <div class="section-box">
       <label><b>Select Branch</b></label>
       <select id="branch">
-        <option value="">-- Select Branch --</option>
+        <option value="">-- Select --</option>
         <option value="Kondhwa">Kondhwa</option>
         <option value="Mundwa">Mundwa</option>
         <option value="Ghorpadi">Ghorpadi</option>
@@ -56,38 +50,26 @@
       </select>
     </div>
 
-    <!-- ADD ITEMS -->
     <div class="section-box">
       <h4>Add Items</h4>
-
       <div class="item-row">
-        <select id="item">
-          <option value="">Loading paans...</option>
-        </select>
-
-        <input type="number" id="qty" value="1" min="1" />
-        <button type="button" onclick="addItem()">Add</button>
+        <select id="item"></select>
+        <input type="number" id="qty" value="1" min="1">
+        <button onclick="addItem()">Add</button>
       </div>
 
-      <!-- CART -->
       <ul id="cart"></ul>
 
-      <!-- TOTAL -->
       <div id="totalBox">
-        Total: ₹<span id="totalPrice">0</span>
+        Estimated Total: ₹<span id="totalPrice">0</span>
       </div>
     </div>
 
-    <!-- BOOK NOW -->
-    <button type="button" class="submit-btn" onclick="bookNow()">
-      Book Now
-    </button>
-
+    <button class="submit-btn" onclick="bookNow()">Book Now</button>
   </div>
 </div>
 
-<!-- ================= PAYMENT POPUP ================= -->
-
+<!-- PAYMENT MODAL -->
 <div id="paymentModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closePaymentPopup()">×</span>
@@ -97,21 +79,16 @@
     <div id="paymentSummary"></div>
 
     <p>
-      <b>Total Amount:</b> ₹<span id="paymentTotal">0</span>
+      <b>Total Amount (Final):</b> ₹<span id="paymentTotal">--</span>
     </p>
 
-    <p style="font-size:13px;color:#555;">
-      Pay via UPI / Cash on Delivery
-    </p>
-
-    <button class="pay-btn" onclick="confirmPayment()">
-      Confirm Order
-    </button>
+    <div class="payment-actions">
+      <button class="cancel-btn" onclick="closePaymentPopup()">Cancel</button>
+      <button class="pay-btn" onclick="confirmPayment()">Confirm Order</button>
+    </div>
   </div>
 </div>
 
-<!-- JS -->
 <script src="app.js"></script>
-
 </body>
 </html>
