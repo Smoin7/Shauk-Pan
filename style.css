@@ -170,6 +170,26 @@ input, select, textarea {
   padding: 14px;
   border-radius: 12px;
 }
+.payment-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.half-pay-btn {
+  background: linear-gradient(135deg, #ff9800, #ffb74d);
+  color: #fff;
+}
+
+.full-pay-btn {
+  background: linear-gradient(135deg, #1f8a70, #2fbf9b);
+  color: #fff;
+}
+
+.half-pay-btn:hover,
+.full-pay-btn:hover {
+  opacity: 0.95;
+}
 
 /* MOBILE */
 @media (max-width: 768px) {
