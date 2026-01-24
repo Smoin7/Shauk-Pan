@@ -63,7 +63,7 @@ body {
 }
 
 /********************************
- * SECTION BOX (NEW)
+ * SECTION BOX
  ********************************/
 .section-box {
   border: 1px solid #f0f0f0;
@@ -74,7 +74,7 @@ body {
 }
 
 /********************************
- * LABELS & HELPER TEXT
+ * LABELS & TEXT
  ********************************/
 .form-section label b {
   font-size: 14px;
@@ -108,13 +108,11 @@ textarea {
   resize: none;
 }
 
-/* PLACEHOLDER FADE */
 input::placeholder,
 textarea::placeholder {
   color: #999;
 }
 
-/* FOCUS GLOW */
 input:focus,
 select:focus,
 textarea:focus {
@@ -201,6 +199,86 @@ textarea:focus {
 }
 
 /********************************
+ * 🔥 PAYMENT MODAL (IMPORTANT)
+ ********************************/
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9999;
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  background: #ffffff;
+  max-width: 420px;
+  margin: 10% auto;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  animation: popupFade 0.25s ease;
+}
+
+@keyframes popupFade {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #7b1e1e;
+}
+
+.modal-content ul {
+  padding-left: 18px;
+  margin: 10px 0;
+}
+
+.modal-content li {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.close {
+  position: absolute;
+  right: 18px;
+  top: 14px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #999;
+}
+
+.close:hover {
+  color: #000;
+}
+
+/********************************
+ * CONFIRM PAYMENT BUTTON
+ ********************************/
+.pay-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #1f8a70, #2fbf9b);
+  color: white;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.pay-btn:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+/********************************
  * MOBILE RESPONSIVE
  ********************************/
 @media (max-width: 768px) {
@@ -216,37 +294,12 @@ textarea:focus {
   .logo-section {
     padding: 25px;
   }
-/* EXTRA GAP BEFORE SECTION HEADERS */
-.section-box label {
-  display: block;
-  margin-top: 14px;   /* space from previous input */
-  margin-bottom: 4px;
-}
-
-/* FIRST LABEL IN A SECTION SHOULD NOT STICK */
-.section-box label:first-of-type {
-  margin-top: 0;
-}
-
-/* INPUTS SHOULD BREATHE A BIT MORE */
-.section-box input,
-.section-box select,
-.section-box textarea {
-  margin-bottom: 14px;
-}
-
-/* HELPER TEXT SPACING */
-.section-box p {
-  margin-top: 2px;
-  margin-bottom: 10px;
-}
-
-/* OPTIONAL: tiny divider feel without line */
-.section-box + .section-box {
-  margin-top: 6px;
-}
 
   .form-section {
     padding: 25px;
+  }
+
+  .modal-content {
+    margin: 20% 16px;
   }
 }
