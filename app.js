@@ -294,6 +294,7 @@ function bookNow() {
       paymentTotal.innerText = totalAmount;
 
       hideLoading();
+      isOrderCreating = false;
       paymentModal.style.display = "block";
     })
     .catch(() => {
@@ -305,19 +306,33 @@ function bookNow() {
 /************************************
  * CLOSE PAYMENT POPUP
  ************************************/
-function closePaymentPopup() {
-  paymentModal.style.display = "none";
-  unlockOrderCreation();
+function closePaymentPopup(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (paymentModal) {
+    paymentModal.style.display = "none";
+  }
+
+  isOrderCreating = false;
+  hideLoading();
 }
 
 /************************************
  * PAY VIA UPI
  ************************************/
 function payUpi(percent, event) {
-  if (event) event.preventDefault();
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
 
   if (!generatedOrderId)
     return alert("Order ID not found.");
+
+  isOrderCreating = true;
 
   console.log("Triggering payment WF", generatedOrderId, percent);
 
@@ -331,18 +346,21 @@ function payUpi(percent, event) {
   })
     .then(res => res.json())
     .then(data => {
-      if (!data.paymentUrl)
+      if (!data.paymentUrl) {
+        isOrderCreating = false;
         return alert("Payment URL not received");
+      }
 
-      // ✅ CLOSE MODAL BEFORE REDIRECT
       if (paymentModal) {
         paymentModal.style.display = "none";
       }
 
-      // ✅ ONLY VALID WAY TO OPEN UPI
       window.location.href = data.paymentUrl;
     })
-    .catch(() => alert("❌ Payment initiation failed"));
+    .catch(() => {
+      isOrderCreating = false;
+      alert("❌ Payment initiation failed");
+    });
 }
 
 /************************************
