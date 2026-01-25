@@ -34,7 +34,6 @@
         <option value="delivery">🛵 Delivery</option>
       </select>
 
-      <!-- UPDATED: hidden by default -->
       <div id="addressBox" style="display:none;">
         <textarea id="address" placeholder="Delivery Address"></textarea>
       </div>
@@ -77,49 +76,85 @@
 
     <h3>💳 Payment Summary</h3>
 
-    <!-- JS injects item + delivery breakdown here -->
     <div id="paymentSummary"></div>
 
-    <!-- UPDATED: wrapper for emphasis -->
     <div class="final-total-box">
       <b>Total Amount (Final):</b>
       ₹<span id="paymentTotal">--</span>
     </div>
 
+    <!-- REQUIRED: hidden orderId -->
+    <span id="orderId" style="display:none;"></span>
+
     <div class="payment-actions">
-  <button class="cancel-btn" onclick="closePaymentPopup()">
-    Cancel
-  </button>
+      <button class="cancel-btn" onclick="closePaymentPopup()">Cancel</button>
 
-  <button class="pay-btn half-pay-btn" onclick="payUpi(50)">
-    Pay 50%
-  </button>
+      <button class="pay-btn half-pay-btn" onclick="payUpi(50)">
+        Pay 50%
+      </button>
 
-  <button class="pay-btn full-pay-btn" onclick="payUpi(100)">
-    Pay Full
-  </button>
-</div>
+      <button class="pay-btn full-pay-btn" onclick="payUpi(100)">
+        Pay Full
+      </button>
+    </div>
 
-<p class="upi-hint">
-  Opens PhonePe / GPay / Paytm
-</p>
-
-
-<p class="upi-hint">
-  You will be redirected to PhonePe / GPay / Paytm
-</p>
-
+    <p class="upi-hint">Opens PhonePe / GPay / Paytm</p>
+    <p class="upi-hint">You will be redirected to PhonePe / GPay / Paytm</p>
   </div>
 </div>
 
 <script src="app.js"></script>
-  <!-- LOADING OVERLAY -->
+
+<!-- 🔥 PAYMENT SCRIPT (NEW & FINAL) -->
+<script>
+async function payUpi(percent) {
+  const orderIdEl = document.getElementById("orderId");
+  if (!orderIdEl || !orderIdEl.innerText) {
+    alert("Order ID not found. Please try again.");
+    return;
+  }
+
+  const orderId = orderIdEl.innerText.trim();
+  const paymentType = percent === 50 ? "HALF" : "FULL";
+
+  try {
+    const res = await fetch(
+      "https://shaikh98.app.n8n.cloud/webhook/payment",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: orderId,
+          paymentType: paymentType
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.paymentUrl) {
+      alert("Payment URL not received");
+      return;
+    }
+
+    // ✅ Redirect to UPI app
+    window.location.href = data.paymentUrl;
+
+  } catch (err) {
+    console.error(err);
+    alert("Payment failed. Please try again.");
+  }
+}
+</script>
+
+<!-- LOADING OVERLAY -->
 <div id="loadingOverlay" style="display:none;">
   <div class="loader-box">
     <div class="spinner"></div>
     <p>Creating your order… Please wait</p>
   </div>
 </div>
+
 <!-- ORDER LOADING MODAL -->
 <div id="orderLoadingModal" class="modal">
   <div class="modal-content" style="text-align:center;">
