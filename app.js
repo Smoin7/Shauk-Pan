@@ -39,7 +39,8 @@ let itemSelect,
   orderTypeSelect,
   addressInput,
   branchSelect,
-  addressBox;
+  addressBox,
+  loadingOverlay;
 
 /************************************
  * INIT ON PAGE LOAD
@@ -58,10 +59,27 @@ document.addEventListener("DOMContentLoaded", () => {
   addressInput = document.getElementById("address");
   branchSelect = document.getElementById("branch");
   addressBox = document.getElementById("addressBox");
+  loadingOverlay = document.getElementById("loadingOverlay");
 
   toggleAddress();
   loadPanInventory();
 });
+
+/************************************
+ * UI HELPERS
+ ************************************/
+function showLoading() {
+  if (loadingOverlay) loadingOverlay.style.display = "flex";
+}
+
+function hideLoading() {
+  if (loadingOverlay) loadingOverlay.style.display = "none";
+}
+
+function unlockOrderCreation() {
+  isOrderCreating = false;
+  hideLoading();
+}
 
 /************************************
  * ORDER TYPE LOGIC
@@ -90,7 +108,6 @@ function loadPanInventory() {
 
       data.pans.forEach(pan => {
         panPriceMap[pan.name] = pan.price;
-
         const opt = document.createElement("option");
         opt.value = pan.name;
         opt.textContent = `${pan.name} (₹${pan.price})`;
@@ -101,7 +118,7 @@ function loadPanInventory() {
 }
 
 /************************************
- * ADD ITEM (OR INCREASE IF EXISTS)
+ * ADD ITEM
  ************************************/
 function addItem() {
   const pan = itemSelect.value;
@@ -113,32 +130,29 @@ function addItem() {
   if (cart[pan]) {
     cart[pan].qty += qty;
   } else {
-    cart[pan] = {
-      qty,
-      price: panPriceMap[pan]
-    };
+    cart[pan] = { qty, price: panPriceMap[pan] };
   }
 
   renderCart();
 }
 
 /************************************
- * INCREASE / DECREASE QTY
+ * QTY CONTROLS
  ************************************/
 function increaseQty(pan) {
-  cart[pan].qty += 1;
+  cart[pan].qty++;
   renderCart();
 }
 
 function decreaseQty(pan) {
   if (cart[pan].qty > 1) {
-    cart[pan].qty -= 1;
+    cart[pan].qty--;
     renderCart();
   }
 }
 
 /************************************
- * RENDER CART + TOTAL
+ * RENDER CART
  ************************************/
 function renderCart() {
   cartList.innerHTML = "";
@@ -154,15 +168,9 @@ function renderCart() {
         <span style="flex:1;">
           ${pan} × ${data.qty} = ₹${lineTotal}
         </span>
-
-        <button type="button" onclick="decreaseQty('${pan}')">−</button>
-        <button type="button" onclick="increaseQty('${pan}')">+</button>
-
-        <button
-          type="button"
-          onclick="removeItem('${pan}')"
-          style="background:none;border:none;color:#a00;font-size:16px;"
-        >✖</button>
+        <button onclick="decreaseQty('${pan}')">−</button>
+        <button onclick="increaseQty('${pan}')">+</button>
+        <button onclick="removeItem('${pan}')" style="color:#a00;">✖</button>
       </div>
     `;
     cartList.appendChild(li);
@@ -180,7 +188,7 @@ function removeItem(pan) {
 }
 
 /************************************
- * BOOK NOW → CREATE ORDER → OPEN POPUP
+ * BOOK NOW (WITH WAITING SCREEN)
  ************************************/
 function bookNow() {
   if (isOrderCreating) return;
@@ -204,29 +212,17 @@ function bookNow() {
     return alert("Please add at least one Paan");
 
   isOrderCreating = true;
+  showLoading(); // 👈 visible waiting screen
 
-  let summaryHTML = "<ul>";
   let itemsTotal = 0;
-
-  Object.entries(cart).forEach(([pan, data]) => {
-    const line = data.qty * data.price;
-    itemsTotal += line;
-    summaryHTML += `<li>${pan} × ${data.qty} = ₹${line}</li>`;
+  Object.values(cart).forEach(d => {
+    itemsTotal += d.qty * d.price;
   });
-
-  summaryHTML += "</ul>";
 
   finalDeliveryCharge =
     orderTypeSelect.value === "delivery" ? DELIVERY_CHARGE : 0;
 
-  if (finalDeliveryCharge > 0) {
-    summaryHTML += `<p><b>Delivery Charge:</b> ₹${finalDeliveryCharge}</p>`;
-  }
-
   const totalAmount = itemsTotal + finalDeliveryCharge;
-
-  paymentSummary.innerHTML = summaryHTML;
-  paymentTotal.innerText = totalAmount;
 
   fetch(ORDER_API, {
     method: "POST",
@@ -257,16 +253,21 @@ function bookNow() {
 
       if (!row || !row.Order_ID) {
         alert("❌ Order ID not returned");
-        isOrderCreating = false;
+        unlockOrderCreation();
         return;
       }
 
       generatedOrderId = row.Order_ID;
+
+      paymentSummary.innerHTML = "";
+      paymentTotal.innerText = totalAmount;
+
+      hideLoading();
       paymentModal.style.display = "block";
     })
     .catch(() => {
       alert("❌ Failed to create order");
-      isOrderCreating = false;
+      unlockOrderCreation();
     });
 }
 
@@ -275,23 +276,22 @@ function bookNow() {
  ************************************/
 function closePaymentPopup() {
   paymentModal.style.display = "none";
+  unlockOrderCreation(); // 🔓 allow new orders
 }
 
 /************************************
- * PAY VIA UPI (50% / FULL)
+ * PAY VIA UPI
  ************************************/
 function payUpi(percent) {
   if (!generatedOrderId)
-    return alert("Order ID not found. Please try again.");
-
-  const paymentType = percent === 50 ? "HALF" : "FULL";
+    return alert("Order ID not found.");
 
   fetch(PAYMENT_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       orderId: generatedOrderId,
-      paymentType
+      paymentType: percent === 50 ? "HALF" : "FULL"
     })
   })
     .then(res => res.json())
@@ -305,7 +305,7 @@ function payUpi(percent) {
 }
 
 /************************************
- * EXPOSE FUNCTIONS (GITHUB PAGES)
+ * EXPOSE FUNCTIONS
  ************************************/
 window.addItem = addItem;
 window.removeItem = removeItem;
