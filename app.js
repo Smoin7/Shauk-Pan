@@ -231,14 +231,17 @@ function bookNow() {
   })
     .then(res => res.json())
     .then(data => {
-      console.log("✅ Order_WF response:", data);
+      console.log("✅ Order_WF raw response:", data);
 
-      if (!data || !data.orderId) {
+      // ✅ FIX: handle array + correct key
+      const responseItem = Array.isArray(data) ? data[0] : data;
+
+      if (!responseItem || !responseItem.Order_ID) {
         alert("❌ Order ID not returned from server");
         return;
       }
 
-      generatedOrderId = data.orderId;
+      generatedOrderId = responseItem.Order_ID;
       console.log("🆔 ORDER ID SET:", generatedOrderId);
 
       paymentModal.style.display = "block";
