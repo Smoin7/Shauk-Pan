@@ -55,7 +55,7 @@
       <div class="item-row">
         <select id="item"></select>
         <input type="number" id="qty" value="1" min="1">
-        <button onclick="addItem()">Add</button>
+        <button type="button" onclick="addItem()">Add</button>
       </div>
 
       <ul id="cart"></ul>
@@ -65,7 +65,7 @@
       </div>
     </div>
 
-    <button class="submit-btn" onclick="bookNow()">Book Now</button>
+    <button type="button" class="submit-btn" onclick="bookNow()">Book Now</button>
   </div>
 </div>
 
@@ -87,13 +87,19 @@
     <span id="orderId" style="display:none;"></span>
 
     <div class="payment-actions">
-      <button class="cancel-btn" onclick="closePaymentPopup()">Cancel</button>
+      <button type="button" class="cancel-btn" onclick="closePaymentPopup()">Cancel</button>
 
-      <button class="pay-btn half-pay-btn" onclick="payUpi(50)">
+      <button
+        type="button"
+        class="pay-btn half-pay-btn"
+        onclick="payUpi(50, event)">
         Pay 50%
       </button>
 
-      <button class="pay-btn full-pay-btn" onclick="payUpi(100)">
+      <button
+        type="button"
+        class="pay-btn full-pay-btn"
+        onclick="payUpi(100, event)">
         Pay Full
       </button>
     </div>
@@ -105,8 +111,9 @@
 
 <script src="app.js"></script>
 
-<!-- 🔥 PAYMENT SCRIPT (NEW & FINAL) -->
+<!-- 🔥 PAYMENT SCRIPT (INTENTIONALLY DISABLED – handled in app.js) -->
 <script>
+/*
 async function payUpi(percent) {
   const orderIdEl = document.getElementById("orderId");
   if (!orderIdEl || !orderIdEl.innerText) {
@@ -137,7 +144,6 @@ async function payUpi(percent) {
       return;
     }
 
-    // ✅ Redirect to UPI app
     window.location.href = data.paymentUrl;
 
   } catch (err) {
@@ -145,6 +151,7 @@ async function payUpi(percent) {
     alert("Payment failed. Please try again.");
   }
 }
+*/
 </script>
 
 <!-- LOADING OVERLAY -->
