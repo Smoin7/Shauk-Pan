@@ -40,7 +40,8 @@ let itemSelect,
   addressInput,
   branchSelect,
   addressBox,
-  loadingOverlay;
+  loadingOverlay,
+  orderLoadingModal;
 
 /************************************
  * INIT ON PAGE LOAD
@@ -59,21 +60,39 @@ document.addEventListener("DOMContentLoaded", () => {
   addressInput = document.getElementById("address");
   branchSelect = document.getElementById("branch");
   addressBox = document.getElementById("addressBox");
+
+  // BOTH loaders supported
   loadingOverlay = document.getElementById("loadingOverlay");
+  orderLoadingModal = document.getElementById("orderLoadingModal");
 
   toggleAddress();
   loadPanInventory();
 });
 
 /************************************
- * UI HELPERS
+ * UI HELPERS (FIXED)
  ************************************/
 function showLoading() {
-  if (loadingOverlay) loadingOverlay.style.display = "flex";
+  // ✅ Prefer modal popup
+  if (orderLoadingModal) {
+    orderLoadingModal.style.display = "block";
+    return;
+  }
+
+  // fallback (legacy)
+  if (loadingOverlay) {
+    loadingOverlay.style.display = "flex";
+  }
 }
 
 function hideLoading() {
-  if (loadingOverlay) loadingOverlay.style.display = "none";
+  if (orderLoadingModal) {
+    orderLoadingModal.style.display = "none";
+  }
+
+  if (loadingOverlay) {
+    loadingOverlay.style.display = "none";
+  }
 }
 
 function unlockOrderCreation() {
@@ -187,7 +206,7 @@ function removeItem(pan) {
 }
 
 /************************************
- * BOOK NOW (WITH WAITING SCREEN)
+ * BOOK NOW (WITH REAL POPUP)
  ************************************/
 function bookNow() {
   if (isOrderCreating) return;
@@ -211,7 +230,7 @@ function bookNow() {
     return alert("Please add at least one Paan");
 
   isOrderCreating = true;
-  showLoading();
+  showLoading(); // ✅ NOW REAL MODAL
 
   let itemsTotal = 0;
   Object.values(cart).forEach(d => {
@@ -258,7 +277,7 @@ function bookNow() {
 
       generatedOrderId = row.Order_ID;
 
-      // ✅ BUILD PAYMENT SUMMARY
+      // BUILD PAYMENT SUMMARY
       let html = "<ul>";
       Object.entries(cart).forEach(([pan, d]) => {
         html += `<li>${pan} × ${d.qty} = ₹${d.qty * d.price}</li>`;
