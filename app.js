@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
   addressInput = document.getElementById("address");
   branchSelect = document.getElementById("branch");
   addressBox = document.getElementById("addressBox");
-  orderIdSpan = document.getElementById("orderId"); // ✅ IMPORTANT
+  orderIdSpan = document.getElementById("orderId");
 
   loadingOverlay = document.getElementById("loadingOverlay");
   orderLoadingModal = document.getElementById("orderLoadingModal");
@@ -183,9 +183,9 @@ function renderCart() {
           <span style="flex:1;">
             ${pan} × ${data.qty} = ₹${lineTotal}
           </span>
-          <button onclick="decreaseQty('${pan}')">−</button>
-          <button onclick="increaseQty('${pan}')">+</button>
-          <button onclick="removeItem('${pan}')" style="color:#a00;">✖</button>
+          <button type="button" onclick="decreaseQty('${pan}')">−</button>
+          <button type="button" onclick="increaseQty('${pan}')">+</button>
+          <button type="button" onclick="removeItem('${pan}')" style="color:#a00;">✖</button>
         </div>
       </li>
     `;
@@ -274,7 +274,6 @@ function bookNow() {
 
       generatedOrderId = row.Order_ID;
 
-      // ✅ CRITICAL SYNC (FIXES PAYMENT WF)
       if (orderIdSpan) {
         orderIdSpan.innerText = generatedOrderId;
       }
@@ -314,11 +313,13 @@ function closePaymentPopup() {
 /************************************
  * PAY VIA UPI
  ************************************/
-function payUpi(percent) {
+function payUpi(percent, event) {
+  if (event) event.preventDefault();
+
   if (!generatedOrderId)
     return alert("Order ID not found.");
 
-  console.log("Triggering payment WF", generatedOrderId, percent); // ✅ DEBUG
+  console.log("Triggering payment WF", generatedOrderId, percent);
 
   fetch(PAYMENT_API, {
     method: "POST",
@@ -333,6 +334,12 @@ function payUpi(percent) {
       if (!data.paymentUrl)
         return alert("Payment URL not received");
 
+      // ✅ CLOSE MODAL BEFORE REDIRECT
+      if (paymentModal) {
+        paymentModal.style.display = "none";
+      }
+
+      // ✅ ONLY VALID WAY TO OPEN UPI
       window.location.href = data.paymentUrl;
     })
     .catch(() => alert("❌ Payment initiation failed"));
