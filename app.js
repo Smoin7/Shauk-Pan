@@ -4,18 +4,26 @@
 const cart = {};
 const panPriceMap = {};
 
-// ✅ ADDED
 const DELIVERY_CHARGE = 50;
 let finalDeliveryCharge = 0;
 
+// 🔐 ORDER ID FROM n8n
+let generatedOrderId = "";
+
+/************************************
+ * API ENDPOINTS
+ ************************************/
 const INVENTORY_API =
   "https://shaikh98.app.n8n.cloud/webhook/pan-inventory";
 
 const ORDER_API =
   "https://shaikh98.app.n8n.cloud/webhook/paan-order";
 
+const PAYMENT_API =
+  "https://shaikh98.app.n8n.cloud/webhook/payment";
+
 /************************************
- * DOM ELEMENT REFERENCES (SAFE)
+ * DOM ELEMENT REFERENCES
  ************************************/
 let itemSelect,
   qtyInput,
@@ -128,12 +136,7 @@ function renderCart() {
       <button
         type="button"
         onclick="removeItem('${pan}')"
-        style="
-          margin-left:8px;
-          background:none;
-          border:none;
-          cursor:pointer;
-        "
+        style="margin-left:8px;background:none;border:none;cursor:pointer;"
       >✖</button>
     `;
     cartList.appendChild(li);
@@ -151,7 +154,7 @@ function removeItem(pan) {
 }
 
 /************************************
- * BOOK NOW → OPEN PAYMENT POPUP
+ * BOOK NOW → CREATE ORDER → OPEN POPUP
  ************************************/
 function bookNow() {
   if (!nameInput.value.trim())
@@ -173,59 +176,29 @@ function bookNow() {
     return alert("Please add at least one Paan");
 
   let summaryHTML = "<ul>";
-  let total = 0;
+  let itemsTotal = 0;
 
   Object.entries(cart).forEach(([pan, data]) => {
     const line = data.qty * data.price;
-    total += line;
-    summaryHTML +=
-      `<li>${pan} × ${data.qty} = ₹${line}</li>`;
+    itemsTotal += line;
+    summaryHTML += `<li>${pan} × ${data.qty} = ₹${line}</li>`;
   });
 
   summaryHTML += "</ul>";
 
-  // ✅ ADDED: lock delivery charge here
   finalDeliveryCharge =
     orderTypeSelect.value === "delivery" ? DELIVERY_CHARGE : 0;
 
   if (finalDeliveryCharge > 0) {
-    summaryHTML +=
-      `<p><b>Delivery Charge:</b> ₹${finalDeliveryCharge}</p>`;
+    summaryHTML += `<p><b>Delivery Charge:</b> ₹${finalDeliveryCharge}</p>`;
   }
-
-  paymentSummary.innerHTML = summaryHTML;
-  paymentTotal.innerText = total + finalDeliveryCharge;
-
-  paymentModal.style.display = "block";
-}
-
-/************************************
- * CLOSE PAYMENT POPUP
- ************************************/
-function closePaymentPopup() {
-  paymentModal.style.display = "none";
-}
-
-/************************************
- * CONFIRM PAYMENT → SUBMIT ORDER
- ************************************/
-function confirmPayment() {
-  closePaymentPopup();
-  submitOrder();
-}
-
-/************************************
- * SUBMIT ORDER TO n8n
- ************************************/
-function submitOrder() {
-  let itemsTotal = 0;
-
-  Object.values(cart).forEach(data => {
-    itemsTotal += data.qty * data.price;
-  });
 
   const totalAmount = itemsTotal + finalDeliveryCharge;
 
+  paymentSummary.innerHTML = summaryHTML;
+  paymentTotal.innerText = totalAmount;
+
+  // 🔐 CREATE ORDER IN n8n FIRST
   const payload = {
     name: nameInput.value.trim(),
     mobile: mobileInput.value.trim(),
@@ -243,10 +216,9 @@ function submitOrder() {
       lineTotal: data.qty * data.price
     })),
 
-    // ✅ ADDED FIELDS FOR n8n
-    itemsTotal: itemsTotal,
+    itemsTotal,
     deliveryCharge: finalDeliveryCharge,
-    totalAmount: totalAmount
+    totalAmount
   };
 
   fetch(ORDER_API, {
@@ -254,11 +226,64 @@ function submitOrder() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   })
-    .then(() => {
-      alert("✅ Order placed successfully!");
-      location.reload();
+    .then(res => res.json())
+    .then(data => {
+      generatedOrderId = data.orderId;
+      console.log("ORDER ID FROM n8n:", generatedOrderId);
+
+      paymentModal.style.display = "block";
     })
     .catch(() => {
-      alert("❌ Order failed. Please try again.");
+      alert("❌ Failed to create order");
     });
 }
+
+/************************************
+ * CLOSE PAYMENT POPUP
+ ************************************/
+function closePaymentPopup() {
+  paymentModal.style.display = "none";
+}
+
+/************************************
+ * PAY VIA UPI (50% / FULL)
+ ************************************/
+function payUpi(percent) {
+  if (!generatedOrderId) {
+    alert("Order ID not found. Please try again.");
+    return;
+  }
+
+  const paymentType = percent === 50 ? "HALF" : "FULL";
+
+  fetch(PAYMENT_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      orderId: generatedOrderId,
+      paymentType
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.paymentUrl) {
+        alert("Payment URL not received");
+        return;
+      }
+
+      console.log("UPI URL:", data.paymentUrl);
+      window.location.href = data.paymentUrl;
+    })
+    .catch(() => {
+      alert("❌ Payment initiation failed");
+    });
+}
+
+/************************************
+ * EXPOSE FUNCTIONS (GITHUB PAGES FIX)
+ ************************************/
+window.addItem = addItem;
+window.removeItem = removeItem;
+window.bookNow = bookNow;
+window.payUpi = payUpi;
+window.closePaymentPopup = closePaymentPopup;
