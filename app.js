@@ -101,8 +101,7 @@ function loadPanInventory() {
       itemSelect.innerHTML = `<option value="">-- Select Paan --</option>`;
 
       if (!data.pans || data.pans.length === 0) {
-        itemSelect.innerHTML =
-          `<option value="">No Paans Available</option>`;
+        itemSelect.innerHTML = `<option value="">No Paans Available</option>`;
         return;
       }
 
@@ -162,18 +161,18 @@ function renderCart() {
     const lineTotal = data.qty * data.price;
     total += lineTotal;
 
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="flex:1;">
-          ${pan} × ${data.qty} = ₹${lineTotal}
-        </span>
-        <button onclick="decreaseQty('${pan}')">−</button>
-        <button onclick="increaseQty('${pan}')">+</button>
-        <button onclick="removeItem('${pan}')" style="color:#a00;">✖</button>
-      </div>
+    cartList.innerHTML += `
+      <li>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="flex:1;">
+            ${pan} × ${data.qty} = ₹${lineTotal}
+          </span>
+          <button onclick="decreaseQty('${pan}')">−</button>
+          <button onclick="increaseQty('${pan}')">+</button>
+          <button onclick="removeItem('${pan}')" style="color:#a00;">✖</button>
+        </div>
+      </li>
     `;
-    cartList.appendChild(li);
   });
 
   totalPriceEl.innerText = total;
@@ -212,7 +211,7 @@ function bookNow() {
     return alert("Please add at least one Paan");
 
   isOrderCreating = true;
-  showLoading(); // 👈 visible waiting screen
+  showLoading();
 
   let itemsTotal = 0;
   Object.values(cart).forEach(d => {
@@ -259,7 +258,20 @@ function bookNow() {
 
       generatedOrderId = row.Order_ID;
 
-      paymentSummary.innerHTML = "";
+      // ✅ BUILD PAYMENT SUMMARY
+      let html = "<ul>";
+      Object.entries(cart).forEach(([pan, d]) => {
+        html += `<li>${pan} × ${d.qty} = ₹${d.qty * d.price}</li>`;
+      });
+      html += "</ul>";
+
+      if (finalDeliveryCharge > 0) {
+        html += `<p><b>Delivery Charge:</b> ₹${finalDeliveryCharge}</p>`;
+      }
+
+      html += `<hr><p><b>Order ID:</b> ${generatedOrderId}</p>`;
+
+      paymentSummary.innerHTML = html;
       paymentTotal.innerText = totalAmount;
 
       hideLoading();
@@ -276,7 +288,7 @@ function bookNow() {
  ************************************/
 function closePaymentPopup() {
   paymentModal.style.display = "none";
-  unlockOrderCreation(); // 🔓 allow new orders
+  unlockOrderCreation();
 }
 
 /************************************
