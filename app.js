@@ -273,10 +273,7 @@ function bookNow() {
       }
 
       generatedOrderId = row.Order_ID;
-
-      if (orderIdSpan) {
-        orderIdSpan.innerText = generatedOrderId;
-      }
+      orderIdSpan.innerText = generatedOrderId;
 
       let html = "<ul>";
       Object.entries(cart).forEach(([pan, d]) => {
@@ -310,12 +307,10 @@ function closePaymentPopup(event) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation();
   }
 
-  if (paymentModal) {
-    paymentModal.style.display = "none";
-  }
-
+  paymentModal.style.display = "none";
   isOrderCreating = false;
   hideLoading();
 }
@@ -327,14 +322,13 @@ function payUpi(percent, event) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation();
   }
 
   if (!generatedOrderId)
     return alert("Order ID not found.");
 
   isOrderCreating = true;
-
-  console.log("Triggering payment WF", generatedOrderId, percent);
 
   fetch(PAYMENT_API, {
     method: "POST",
@@ -351,11 +345,10 @@ function payUpi(percent, event) {
         return alert("Payment URL not received");
       }
 
-      if (paymentModal) {
-        paymentModal.style.display = "none";
-      }
+      paymentModal.style.display = "none";
 
-      window.location.href = data.paymentUrl;
+      // 🔥 ONLY VALID WAY (NO NEW PAGE HTML)
+      window.location.assign(data.paymentUrl);
     })
     .catch(() => {
       isOrderCreating = false;
