@@ -1,6 +1,8 @@
 /************************************
  * GLOBAL CART & INVENTORY
  ************************************/
+let isOrderCreating = false;
+
 const cart = {};
 const panPriceMap = {};
 
@@ -95,13 +97,11 @@ function loadPanInventory() {
         itemSelect.appendChild(opt);
       });
     })
-    .catch(() => {
-      alert("❌ Failed to load paan inventory");
-    });
+    .catch(() => alert("❌ Failed to load paan inventory"));
 }
 
 /************************************
- * ADD ITEM
+ * ADD ITEM (OR INCREASE IF EXISTS)
  ************************************/
 function addItem() {
   const pan = itemSelect.value;
@@ -109,14 +109,32 @@ function addItem() {
 
   if (!pan) return alert("Please select a Paan");
   if (!qty || qty <= 0) return alert("Enter valid quantity");
-  if (cart[pan]) return alert("This Paan is already added");
 
-  cart[pan] = {
-    qty,
-    price: panPriceMap[pan]
-  };
+  if (cart[pan]) {
+    cart[pan].qty += qty;
+  } else {
+    cart[pan] = {
+      qty,
+      price: panPriceMap[pan]
+    };
+  }
 
   renderCart();
+}
+
+/************************************
+ * INCREASE / DECREASE QTY
+ ************************************/
+function increaseQty(pan) {
+  cart[pan].qty += 1;
+  renderCart();
+}
+
+function decreaseQty(pan) {
+  if (cart[pan].qty > 1) {
+    cart[pan].qty -= 1;
+    renderCart();
+  }
 }
 
 /************************************
@@ -132,12 +150,20 @@ function renderCart() {
 
     const li = document.createElement("li");
     li.innerHTML = `
-      ${pan} × ${data.qty} = ₹${lineTotal}
-      <button
-        type="button"
-        onclick="removeItem('${pan}')"
-        style="margin-left:8px;background:none;border:none;cursor:pointer;"
-      >✖</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="flex:1;">
+          ${pan} × ${data.qty} = ₹${lineTotal}
+        </span>
+
+        <button type="button" onclick="decreaseQty('${pan}')">−</button>
+        <button type="button" onclick="increaseQty('${pan}')">+</button>
+
+        <button
+          type="button"
+          onclick="removeItem('${pan}')"
+          style="background:none;border:none;color:#a00;font-size:16px;"
+        >✖</button>
+      </div>
     `;
     cartList.appendChild(li);
   });
@@ -157,7 +183,7 @@ function removeItem(pan) {
  * BOOK NOW → CREATE ORDER → OPEN POPUP
  ************************************/
 function bookNow() {
-  console.log("👉 Book Now clicked");
+  if (isOrderCreating) return;
 
   if (!nameInput.value.trim())
     return alert("Please enter your name");
@@ -176,6 +202,8 @@ function bookNow() {
 
   if (Object.keys(cart).length === 0)
     return alert("Please add at least one Paan");
+
+  isOrderCreating = true;
 
   let summaryHTML = "<ul>";
   let itemsTotal = 0;
@@ -200,55 +228,45 @@ function bookNow() {
   paymentSummary.innerHTML = summaryHTML;
   paymentTotal.innerText = totalAmount;
 
-  const payload = {
-    name: nameInput.value.trim(),
-    mobile: mobileInput.value.trim(),
-    orderType: orderTypeSelect.value,
-    address:
-      orderTypeSelect.value === "delivery"
-        ? addressInput.value.trim()
-        : "",
-    branch: branchSelect.value,
-
-    items: Object.entries(cart).map(([pan, data]) => ({
-      item: pan,
-      qty: data.qty,
-      price: data.price,
-      lineTotal: data.qty * data.price
-    })),
-
-    itemsTotal,
-    deliveryCharge: finalDeliveryCharge,
-    totalAmount
-  };
-
-  console.log("📦 Sending order to Order_WF:", payload);
-
   fetch(ORDER_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      name: nameInput.value.trim(),
+      mobile: mobileInput.value.trim(),
+      orderType: orderTypeSelect.value,
+      address:
+        orderTypeSelect.value === "delivery"
+          ? addressInput.value.trim()
+          : "",
+      branch: branchSelect.value,
+      items: Object.entries(cart).map(([pan, d]) => ({
+        item: pan,
+        qty: d.qty,
+        price: d.price,
+        lineTotal: d.qty * d.price
+      })),
+      itemsTotal,
+      deliveryCharge: finalDeliveryCharge,
+      totalAmount
+    })
   })
     .then(res => res.json())
     .then(data => {
-      console.log("✅ Order_WF raw response:", data);
+      const row = Array.isArray(data) ? data[0] : data;
 
-      // ✅ FIX: handle array + correct key
-      const responseItem = Array.isArray(data) ? data[0] : data;
-
-      if (!responseItem || !responseItem.Order_ID) {
-        alert("❌ Order ID not returned from server");
+      if (!row || !row.Order_ID) {
+        alert("❌ Order ID not returned");
+        isOrderCreating = false;
         return;
       }
 
-      generatedOrderId = responseItem.Order_ID;
-      console.log("🆔 ORDER ID SET:", generatedOrderId);
-
+      generatedOrderId = row.Order_ID;
       paymentModal.style.display = "block";
     })
-    .catch(err => {
-      console.error("❌ Order_WF error:", err);
+    .catch(() => {
       alert("❌ Failed to create order");
+      isOrderCreating = false;
     });
 }
 
@@ -263,10 +281,8 @@ function closePaymentPopup() {
  * PAY VIA UPI (50% / FULL)
  ************************************/
 function payUpi(percent) {
-  if (!generatedOrderId) {
-    alert("Order ID not found. Please try again.");
-    return;
-  }
+  if (!generatedOrderId)
+    return alert("Order ID not found. Please try again.");
 
   const paymentType = percent === 50 ? "HALF" : "FULL";
 
@@ -280,17 +296,12 @@ function payUpi(percent) {
   })
     .then(res => res.json())
     .then(data => {
-      if (!data.paymentUrl) {
-        alert("Payment URL not received");
-        return;
-      }
+      if (!data.paymentUrl)
+        return alert("Payment URL not received");
 
-      console.log("🔗 UPI URL:", data.paymentUrl);
       window.location.href = data.paymentUrl;
     })
-    .catch(() => {
-      alert("❌ Payment initiation failed");
-    });
+    .catch(() => alert("❌ Payment initiation failed"));
 }
 
 /************************************
@@ -298,6 +309,8 @@ function payUpi(percent) {
  ************************************/
 window.addItem = addItem;
 window.removeItem = removeItem;
+window.increaseQty = increaseQty;
+window.decreaseQty = decreaseQty;
 window.bookNow = bookNow;
 window.payUpi = payUpi;
 window.closePaymentPopup = closePaymentPopup;
