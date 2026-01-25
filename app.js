@@ -41,7 +41,8 @@ let itemSelect,
   branchSelect,
   addressBox,
   loadingOverlay,
-  orderLoadingModal;
+  orderLoadingModal,
+  orderIdSpan;
 
 /************************************
  * INIT ON PAGE LOAD
@@ -60,8 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
   addressInput = document.getElementById("address");
   branchSelect = document.getElementById("branch");
   addressBox = document.getElementById("addressBox");
+  orderIdSpan = document.getElementById("orderId"); // ✅ IMPORTANT
 
-  // BOTH loaders supported
   loadingOverlay = document.getElementById("loadingOverlay");
   orderLoadingModal = document.getElementById("orderLoadingModal");
 
@@ -70,16 +71,13 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /************************************
- * UI HELPERS (FIXED)
+ * UI HELPERS
  ************************************/
 function showLoading() {
-  // ✅ Prefer modal popup
   if (orderLoadingModal) {
     orderLoadingModal.style.display = "block";
     return;
   }
-
-  // fallback (legacy)
   if (loadingOverlay) {
     loadingOverlay.style.display = "flex";
   }
@@ -89,7 +87,6 @@ function hideLoading() {
   if (orderLoadingModal) {
     orderLoadingModal.style.display = "none";
   }
-
   if (loadingOverlay) {
     loadingOverlay.style.display = "none";
   }
@@ -206,7 +203,7 @@ function removeItem(pan) {
 }
 
 /************************************
- * BOOK NOW (WITH REAL POPUP)
+ * BOOK NOW
  ************************************/
 function bookNow() {
   if (isOrderCreating) return;
@@ -230,7 +227,7 @@ function bookNow() {
     return alert("Please add at least one Paan");
 
   isOrderCreating = true;
-  showLoading(); // ✅ NOW REAL MODAL
+  showLoading();
 
   let itemsTotal = 0;
   Object.values(cart).forEach(d => {
@@ -277,7 +274,11 @@ function bookNow() {
 
       generatedOrderId = row.Order_ID;
 
-      // BUILD PAYMENT SUMMARY
+      // ✅ CRITICAL SYNC (FIXES PAYMENT WF)
+      if (orderIdSpan) {
+        orderIdSpan.innerText = generatedOrderId;
+      }
+
       let html = "<ul>";
       Object.entries(cart).forEach(([pan, d]) => {
         html += `<li>${pan} × ${d.qty} = ₹${d.qty * d.price}</li>`;
@@ -316,6 +317,8 @@ function closePaymentPopup() {
 function payUpi(percent) {
   if (!generatedOrderId)
     return alert("Order ID not found.");
+
+  console.log("Triggering payment WF", generatedOrderId, percent); // ✅ DEBUG
 
   fetch(PAYMENT_API, {
     method: "POST",
