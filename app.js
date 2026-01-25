@@ -157,6 +157,8 @@ function removeItem(pan) {
  * BOOK NOW → CREATE ORDER → OPEN POPUP
  ************************************/
 function bookNow() {
+  console.log("👉 Book Now clicked");
+
   if (!nameInput.value.trim())
     return alert("Please enter your name");
 
@@ -198,7 +200,6 @@ function bookNow() {
   paymentSummary.innerHTML = summaryHTML;
   paymentTotal.innerText = totalAmount;
 
-  // 🔐 CREATE ORDER IN n8n FIRST
   const payload = {
     name: nameInput.value.trim(),
     mobile: mobileInput.value.trim(),
@@ -221,6 +222,8 @@ function bookNow() {
     totalAmount
   };
 
+  console.log("📦 Sending order to Order_WF:", payload);
+
   fetch(ORDER_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -228,12 +231,20 @@ function bookNow() {
   })
     .then(res => res.json())
     .then(data => {
+      console.log("✅ Order_WF response:", data);
+
+      if (!data || !data.orderId) {
+        alert("❌ Order ID not returned from server");
+        return;
+      }
+
       generatedOrderId = data.orderId;
-      console.log("ORDER ID FROM n8n:", generatedOrderId);
+      console.log("🆔 ORDER ID SET:", generatedOrderId);
 
       paymentModal.style.display = "block";
     })
-    .catch(() => {
+    .catch(err => {
+      console.error("❌ Order_WF error:", err);
       alert("❌ Failed to create order");
     });
 }
@@ -271,7 +282,7 @@ function payUpi(percent) {
         return;
       }
 
-      console.log("UPI URL:", data.paymentUrl);
+      console.log("🔗 UPI URL:", data.paymentUrl);
       window.location.href = data.paymentUrl;
     })
     .catch(() => {
@@ -280,7 +291,7 @@ function payUpi(percent) {
 }
 
 /************************************
- * EXPOSE FUNCTIONS (GITHUB PAGES FIX)
+ * EXPOSE FUNCTIONS (GITHUB PAGES)
  ************************************/
 window.addItem = addItem;
 window.removeItem = removeItem;
