@@ -254,6 +254,20 @@ textarea {
   animation: slideDown 0.3s ease-out;
 }
 
+/* Quick Confirmation Buttons */
+#quickConfirmButtons {
+  animation: slideDown 0.3s ease-out;
+}
+
+#quickConfirmButtons button {
+  transition: all 0.2s ease;
+}
+
+#quickConfirmButtons button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
 /* QR CODE SECTION */
 .qr-section {
   margin-bottom: 10px;
