@@ -234,10 +234,29 @@ textarea {
 #paymentUrlContainer {
   margin-top: 16px;
   background: #f0f8ff;
-  padding: 12px;
+  padding: 16px;
   border-radius: 8px;
   border: 2px solid #1f8a70;
   animation: slideDown 0.3s ease-out;
+}
+
+/* QR CODE SECTION */
+.qr-section {
+  margin-bottom: 12px;
+}
+
+#qrCodeContainer {
+  display: flex;
+  justify-content: center;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 2px solid #1f8a70;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#qrCanvas {
+  display: block;
 }
 
 @keyframes slideDown {
