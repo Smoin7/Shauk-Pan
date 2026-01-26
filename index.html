@@ -30,7 +30,7 @@
     <div class="section-box">
       <label><b>Order Type</b></label>
       <select id="orderType" onchange="toggleAddress()">
-        <option value="pickup">🏃 Pickup</option>
+        <option value="pickup">🍃 Pickup</option>
         <option value="delivery">🛵 Delivery</option>
       </select>
 
@@ -55,7 +55,7 @@
       <div class="item-row">
         <select id="item"></select>
         <input type="number" id="qty" value="1" min="1">
-        <button type="button" onclick="addItem()">Add</button>
+        <button onclick="addItem()">Add</button>
       </div>
 
       <ul id="cart"></ul>
@@ -65,7 +65,7 @@
       </div>
     </div>
 
-    <button type="button" class="submit-btn" onclick="bookNow()">Book Now</button>
+    <button class="submit-btn" onclick="bookNow()">Book Now</button>
   </div>
 </div>
 
@@ -83,76 +83,24 @@
       ₹<span id="paymentTotal">--</span>
     </div>
 
-    <!-- REQUIRED: hidden orderId -->
+    <!-- Hidden orderId for reference -->
     <span id="orderId" style="display:none;"></span>
 
     <div class="payment-actions">
-      <button type="button" class="cancel-btn" onclick="closePaymentPopup()">Cancel</button>
+      <button class="cancel-btn" onclick="closePaymentPopup()">Cancel</button>
 
-      <button
-        type="button"
-        class="pay-btn half-pay-btn"
-        onclick="payUpi(50, event)">
+      <button class="pay-btn half-pay-btn" onclick="payUpi(50)">
         Pay 50%
       </button>
 
-      <button
-        type="button"
-        class="pay-btn full-pay-btn"
-        onclick="payUpi(100, event)">
+      <button class="pay-btn full-pay-btn" onclick="payUpi(100)">
         Pay Full
       </button>
     </div>
 
-    <p class="upi-hint">Opens PhonePe / GPay / Paytm</p>
     <p class="upi-hint">You will be redirected to PhonePe / GPay / Paytm</p>
   </div>
 </div>
-
-<script src="app.js"></script>
-
-<!-- 🔥 PAYMENT SCRIPT (INTENTIONALLY DISABLED – handled in app.js) -->
-<script>
-/*
-async function payUpi(percent) {
-  const orderIdEl = document.getElementById("orderId");
-  if (!orderIdEl || !orderIdEl.innerText) {
-    alert("Order ID not found. Please try again.");
-    return;
-  }
-
-  const orderId = orderIdEl.innerText.trim();
-  const paymentType = percent === 50 ? "HALF" : "FULL";
-
-  try {
-    const res = await fetch(
-      "https://shaikh98.app.n8n.cloud/webhook/payment",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: orderId,
-          paymentType: paymentType
-        })
-      }
-    );
-
-    const data = await res.json();
-
-    if (!data.paymentUrl) {
-      alert("Payment URL not received");
-      return;
-    }
-
-    window.location.href = data.paymentUrl;
-
-  } catch (err) {
-    console.error(err);
-    alert("Payment failed. Please try again.");
-  }
-}
-*/
-</script>
 
 <!-- LOADING OVERLAY -->
 <div id="loadingOverlay" style="display:none;">
@@ -169,6 +117,8 @@ async function payUpi(percent) {
     <p>Please wait</p>
   </div>
 </div>
+
+<script src="app.js"></script>
 
 </body>
 </html>
