@@ -335,12 +335,50 @@ async function payUpi(percent) {
       return;
     }
 
+    // ✅ Display the payment URL
+    displayPaymentUrl(data.paymentUrl);
+
     // ✅ Redirect to UPI payment
     console.log("🔗 Redirecting to:", data.paymentUrl);
     window.location.href = data.paymentUrl;
   } catch (err) {
     console.error("❌ Payment error:", err);
     alert("❌ Payment initiation failed. Please try again.");
+  }
+}
+
+/************************************
+ * DISPLAY PAYMENT URL
+ ************************************/
+function displayPaymentUrl(url) {
+  const container = document.getElementById("paymentUrlContainer");
+  const input = document.getElementById("paymentUrlInput");
+  
+  if (container && input) {
+    input.value = url;
+    container.style.display = "block";
+  }
+}
+
+/************************************
+ * COPY PAYMENT URL
+ ************************************/
+function copyPaymentUrl() {
+  const input = document.getElementById("paymentUrlInput");
+  
+  if (input) {
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile
+    
+    navigator.clipboard.writeText(input.value)
+      .then(() => {
+        alert("✅ Payment link copied to clipboard!");
+      })
+      .catch(() => {
+        // Fallback for older browsers
+        document.execCommand("copy");
+        alert("✅ Payment link copied!");
+      });
   }
 }
 
@@ -355,3 +393,4 @@ window.bookNow = bookNow;
 window.payUpi = payUpi;
 window.closePaymentPopup = closePaymentPopup;
 window.toggleAddress = toggleAddress;
+window.copyPaymentUrl = copyPaymentUrl;
