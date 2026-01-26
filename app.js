@@ -12,10 +12,6 @@ let finalDeliveryCharge = 0;
 // 📌 ORDER ID FROM n8n
 let generatedOrderId = "";
 
-// 📌 Payment tracking
-let userLeftForPayment = false;
-let paymentStartTime = null;
-
 /************************************
  * API ENDPOINTS
  ************************************/
@@ -69,7 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   toggleAddress();
   loadPanInventory();
-  setupPaymentTracking();
 });
 
 /************************************
@@ -348,9 +343,6 @@ async function payUpi(percent) {
     displayPaymentUrl(data.paymentUrl);
     startPaymentTimer();
 
-    // ✅ Track payment initiation
-    paymentStartTime = new Date();
-    
     // ✅ Only auto-redirect on mobile devices
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
@@ -366,70 +358,6 @@ async function payUpi(percent) {
   } catch (err) {
     console.error("❌ Payment error:", err);
     alert("❌ Payment initiation failed. Please try again.");
-  }
-}
-
-/************************************
- * SETUP PAYMENT TRACKING
- ************************************/
-function setupPaymentTracking() {
-  // Track when user leaves page (goes to UPI app)
-  document.addEventListener('visibilitychange', function() {
-    if (document.hidden && paymentStartTime) {
-      // User left the page (likely went to UPI app)
-      userLeftForPayment = true;
-      console.log("👋 User left for payment app");
-    } else if (!document.hidden && userLeftForPayment) {
-      // User returned from UPI app
-      console.log("👋 User returned from payment app");
-      
-      const timeAway = Math.floor((new Date() - paymentStartTime) / 1000);
-      console.log(`⏱️ Time in payment app: ${timeAway} seconds`);
-      
-      // Show confirmation buttons if user was away for more than 10 seconds
-      if (timeAway >= 10) {
-        setTimeout(() => {
-          showPaymentConfirmationButtons();
-        }, 2000); // Wait 2 seconds after return
-      }
-    }
-  });
-  
-  // Also detect clicks on payment link or QR area
-  document.addEventListener('click', function(e) {
-    const paymentLink = document.getElementById('paymentUrlLink');
-    const qrContainer = document.getElementById('qrCodeContainer');
-    
-    if (paymentLink && paymentLink.contains(e.target)) {
-      console.log("🔗 Payment link clicked");
-      userLeftForPayment = true;
-      paymentStartTime = new Date();
-    }
-    
-    if (qrContainer && qrContainer.contains(e.target)) {
-      console.log("📱 QR code area clicked");
-      // Note: Can't track QR scan directly, but user might be taking screenshot
-    }
-  });
-}
-}
-
-/************************************
- * SHOW PAYMENT CONFIRMATION BUTTONS
- ************************************/
-function showPaymentConfirmationButtons() {
-  const quickConfirmButtons = document.getElementById("quickConfirmButtons");
-  
-  if (quickConfirmButtons && quickConfirmButtons.style.display === "none") {
-    quickConfirmButtons.style.display = "block";
-    
-    // Add slide-in animation
-    quickConfirmButtons.style.animation = "slideDown 0.3s ease-out";
-    
-    console.log("✅ Confirmation buttons displayed");
-    
-    // Optional: Show a toast notification
-    // alert("👋 Welcome back! Did you complete the payment?");
   }
 }
 
@@ -455,15 +383,10 @@ function startPaymentTimer() {
       timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
     
-    // Timer expired - show confirmation modal as fallback
+    // Timer expired
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
-      
-      // Only show modal if buttons haven't been clicked yet
-      const quickButtons = document.getElementById("quickConfirmButtons");
-      if (!quickButtons || quickButtons.style.display === "none") {
-        showConfirmationModal();
-      }
+      showConfirmationModal();
     }
   }, 1000);
   
@@ -516,20 +439,9 @@ async function confirmPayment(response) {
   
   console.log(`💳 Payment confirmation: ${response} for order ${generatedOrderId}`);
   
-  // Hide quick buttons immediately
-  const quickButtons = document.getElementById("quickConfirmButtons");
-  if (quickButtons) {
-    quickButtons.style.display = "none";
-  }
-  
   showLoading();
   
   try {
-    // Calculate time spent in payment
-    const timeSpent = paymentStartTime 
-      ? Math.floor((new Date() - paymentStartTime) / 1000) 
-      : 0;
-    
     // Send confirmation to n8n
     const res = await fetch(ORDER_API, {
       method: "POST",
@@ -539,18 +451,12 @@ async function confirmPayment(response) {
         paymentConfirmed: response,
         confirmedAt: new Date().toISOString(),
         customerName: nameInput.value.trim(),
-        customerMobile: mobileInput.value.trim(),
-        timeSpentInPaymentApp: timeSpent,
-        userLeftForPayment: userLeftForPayment
+        customerMobile: mobileInput.value.trim()
       })
     });
     
     hideLoading();
     
-    // Close all modals
-    if (paymentModal) {
-      paymentModal.style.display = "none";
-    }
     if (confirmationModal) {
       confirmationModal.style.display = "none";
     }
@@ -560,10 +466,6 @@ async function confirmPayment(response) {
     } else {
       alert("❌ Order cancelled. No payment was processed.");
     }
-    
-    // Reset tracking variables
-    userLeftForPayment = false;
-    paymentStartTime = null;
     
     // Reset and reload page
     setTimeout(() => {
