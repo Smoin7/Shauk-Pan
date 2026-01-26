@@ -98,7 +98,17 @@
       </button>
     </div>
 
-    <p class="upi-hint">You will be redirected to PhonePe / GPay / Paytm</p>
+    <!-- Payment URL Display -->
+    <div id="paymentUrlContainer" style="display:none;">
+      <p>Payment Link Generated:</p>
+      <div class="url-row">
+        <input type="text" id="paymentUrlInput" readonly>
+        <button onclick="copyPaymentUrl()">📋 Copy</button>
+      </div>
+      <p class="hint">Click Copy to share this link, or wait for auto-redirect</p>
+    </div>
+
+    <p class="upi-hint">You will be redirected to PhonePe / GPay / Paytm in 1 second</p>
   </div>
 </div>
 
