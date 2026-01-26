@@ -332,15 +332,21 @@ async function payUpi(percent) {
 
     if (!data.paymentUrl) {
       alert("❌ Payment URL not received from server");
+      console.error("Response data:", data);
       return;
     }
 
-    // ✅ Display the payment URL
+    // ✅ Display the payment URL FIRST
     displayPaymentUrl(data.paymentUrl);
 
-    // ✅ Redirect to UPI payment
+    // ✅ Then redirect after a short delay
     console.log("🔗 Redirecting to:", data.paymentUrl);
-    window.location.href = data.paymentUrl;
+    
+    // Give time for URL to display before redirect
+    setTimeout(() => {
+      window.location.href = data.paymentUrl;
+    }, 1000);
+    
   } catch (err) {
     console.error("❌ Payment error:", err);
     alert("❌ Payment initiation failed. Please try again.");
@@ -354,9 +360,16 @@ function displayPaymentUrl(url) {
   const container = document.getElementById("paymentUrlContainer");
   const input = document.getElementById("paymentUrlInput");
   
+  console.log("📎 Displaying payment URL:", url);
+  console.log("Container found:", !!container);
+  console.log("Input found:", !!input);
+  
   if (container && input) {
     input.value = url;
     container.style.display = "block";
+    console.log("✅ Payment URL displayed successfully");
+  } else {
+    console.error("❌ Payment URL container or input not found!");
   }
 }
 
