@@ -339,13 +339,12 @@ async function payUpi(percent) {
     // ✅ Display the payment URL FIRST
     displayPaymentUrl(data.paymentUrl);
 
-    // ✅ Then redirect after a short delay
-    console.log("🔗 Redirecting to:", data.paymentUrl);
+    // ✅ Then redirect after 3 seconds (gives time to click link)
+    console.log("🔗 Auto-redirecting in 3 seconds to:", data.paymentUrl);
     
-    // Give time for URL to display before redirect
     setTimeout(() => {
       window.location.href = data.paymentUrl;
-    }, 1000);
+    }, 3000);
     
   } catch (err) {
     console.error("❌ Payment error:", err);
@@ -358,18 +357,20 @@ async function payUpi(percent) {
  ************************************/
 function displayPaymentUrl(url) {
   const container = document.getElementById("paymentUrlContainer");
-  const input = document.getElementById("paymentUrlInput");
+  const link = document.getElementById("paymentUrlLink");
+  const text = document.getElementById("paymentUrlText");
   
   console.log("📎 Displaying payment URL:", url);
   console.log("Container found:", !!container);
-  console.log("Input found:", !!input);
+  console.log("Link found:", !!link);
   
-  if (container && input) {
-    input.value = url;
+  if (container && link && text) {
+    link.href = url;
+    text.textContent = url;
     container.style.display = "block";
     console.log("✅ Payment URL displayed successfully");
   } else {
-    console.error("❌ Payment URL container or input not found!");
+    console.error("❌ Payment URL elements not found!");
   }
 }
 
@@ -377,19 +378,23 @@ function displayPaymentUrl(url) {
  * COPY PAYMENT URL
  ************************************/
 function copyPaymentUrl() {
-  const input = document.getElementById("paymentUrlInput");
+  const link = document.getElementById("paymentUrlLink");
   
-  if (input) {
-    input.select();
-    input.setSelectionRange(0, 99999); // For mobile
+  if (link && link.href) {
+    const url = link.href;
     
-    navigator.clipboard.writeText(input.value)
+    navigator.clipboard.writeText(url)
       .then(() => {
         alert("✅ Payment link copied to clipboard!");
       })
       .catch(() => {
         // Fallback for older browsers
+        const tempInput = document.createElement("input");
+        tempInput.value = url;
+        document.body.appendChild(tempInput);
+        tempInput.select();
         document.execCommand("copy");
+        document.body.removeChild(tempInput);
         alert("✅ Payment link copied!");
       });
   }
