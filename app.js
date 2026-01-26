@@ -37,7 +37,9 @@ let itemSelect,
   addressBox,
   loadingOverlay,
   orderLoadingModal,
-  orderIdSpan;
+  orderIdSpan,
+  confirmationModal,
+  timerInterval;
 
 /************************************
  * INIT ON PAGE LOAD
@@ -59,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
   orderIdSpan = document.getElementById("orderId");
   loadingOverlay = document.getElementById("loadingOverlay");
   orderLoadingModal = document.getElementById("orderLoadingModal");
+  confirmationModal = document.getElementById("confirmationModal");
 
   toggleAddress();
   loadPanInventory();
@@ -336,8 +339,9 @@ async function payUpi(percent) {
       return;
     }
 
-    // ✅ Display the payment URL FIRST
+    // ✅ Display the payment URL and start timer
     displayPaymentUrl(data.paymentUrl);
+    startPaymentTimer();
 
     // ✅ Only auto-redirect on mobile devices
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -354,6 +358,124 @@ async function payUpi(percent) {
   } catch (err) {
     console.error("❌ Payment error:", err);
     alert("❌ Payment initiation failed. Please try again.");
+  }
+}
+
+/************************************
+ * START PAYMENT TIMER (5 MINUTES)
+ ************************************/
+function startPaymentTimer() {
+  let timeLeft = 300; // 5 minutes in seconds
+  const timerDisplay = document.getElementById("timerDisplay");
+  
+  // Clear any existing timer
+  if (timerInterval) {
+    clearInterval(timerInterval);
+  }
+  
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    
+    if (timerDisplay) {
+      timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    // Timer expired
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      showConfirmationModal();
+    }
+  }, 1000);
+  
+  // Also show confirmation after 5 minutes
+  setTimeout(() => {
+    showConfirmationModal();
+  }, 300000); // 5 minutes
+}
+
+/************************************
+ * SHOW CONFIRMATION MODAL
+ ************************************/
+function showConfirmationModal() {
+  // Close payment modal
+  if (paymentModal) {
+    paymentModal.style.display = "none";
+  }
+  
+  // Clear timer
+  if (timerInterval) {
+    clearInterval(timerInterval);
+  }
+  
+  // Populate confirmation modal
+  const confirmOrderIdEl = document.getElementById("confirmOrderId");
+  const confirmAmountEl = document.getElementById("confirmAmount");
+  
+  if (confirmOrderIdEl) {
+    confirmOrderIdEl.textContent = generatedOrderId;
+  }
+  
+  if (confirmAmountEl) {
+    confirmAmountEl.textContent = paymentTotal ? paymentTotal.textContent : "--";
+  }
+  
+  // Show confirmation modal
+  if (confirmationModal) {
+    confirmationModal.style.display = "block";
+  }
+}
+
+/************************************
+ * CONFIRM PAYMENT (YES/NO)
+ ************************************/
+async function confirmPayment(response) {
+  if (!generatedOrderId) {
+    alert("❌ Order ID not found");
+    return;
+  }
+  
+  console.log(`💳 Payment confirmation: ${response} for order ${generatedOrderId}`);
+  
+  showLoading();
+  
+  try {
+    // Send confirmation to n8n
+    const res = await fetch(ORDER_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId: generatedOrderId,
+        paymentConfirmed: response,
+        confirmedAt: new Date().toISOString(),
+        customerName: nameInput.value.trim(),
+        customerMobile: mobileInput.value.trim()
+      })
+    });
+    
+    hideLoading();
+    
+    if (confirmationModal) {
+      confirmationModal.style.display = "none";
+    }
+    
+    if (response === "YES") {
+      alert("✅ Thank you! Your payment is being verified. You'll receive confirmation shortly.");
+    } else {
+      alert("❌ Order cancelled. No payment was processed.");
+    }
+    
+    // Reset and reload page
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+    
+  } catch (err) {
+    console.error("❌ Confirmation error:", err);
+    hideLoading();
+    alert("❌ Failed to save confirmation. Please contact support.");
   }
 }
 
@@ -381,7 +503,7 @@ function displayPaymentUrl(url) {
         const qr = new QRious({
           element: qrCanvas,
           value: url,
-          size: 200,
+          size: 180, // Reduced from 200 for better fit
           level: 'H', // High error correction
           background: 'white',
           foreground: '#1f8a70'
@@ -439,3 +561,4 @@ window.payUpi = payUpi;
 window.closePaymentPopup = closePaymentPopup;
 window.toggleAddress = toggleAddress;
 window.copyPaymentUrl = copyPaymentUrl;
+window.confirmPayment = confirmPayment;
