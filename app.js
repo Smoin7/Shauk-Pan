@@ -339,12 +339,17 @@ async function payUpi(percent) {
     // ✅ Display the payment URL FIRST
     displayPaymentUrl(data.paymentUrl);
 
-    // ✅ Then redirect after 3 seconds (gives time to click link)
-    console.log("🔗 Auto-redirecting in 3 seconds to:", data.paymentUrl);
+    // ✅ Only auto-redirect on mobile devices
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    setTimeout(() => {
-      window.location.href = data.paymentUrl;
-    }, 3000);
+    if (isMobile) {
+      console.log("🔗 Mobile device detected - Auto-redirecting in 3 seconds to:", data.paymentUrl);
+      setTimeout(() => {
+        window.location.href = data.paymentUrl;
+      }, 3000);
+    } else {
+      console.log("💻 Desktop/Tablet detected - QR Code displayed, no auto-redirect");
+    }
     
   } catch (err) {
     console.error("❌ Payment error:", err);
@@ -359,14 +364,36 @@ function displayPaymentUrl(url) {
   const container = document.getElementById("paymentUrlContainer");
   const link = document.getElementById("paymentUrlLink");
   const text = document.getElementById("paymentUrlText");
+  const qrCanvas = document.getElementById("qrCanvas");
   
   console.log("📎 Displaying payment URL:", url);
   console.log("Container found:", !!container);
   console.log("Link found:", !!link);
+  console.log("QR Canvas found:", !!qrCanvas);
   
   if (container && link && text) {
     link.href = url;
     text.textContent = url;
+    
+    // Generate QR Code
+    if (qrCanvas && typeof QRious !== 'undefined') {
+      try {
+        const qr = new QRious({
+          element: qrCanvas,
+          value: url,
+          size: 200,
+          level: 'H', // High error correction
+          background: 'white',
+          foreground: '#1f8a70'
+        });
+        console.log("✅ QR Code generated successfully");
+      } catch (error) {
+        console.error("❌ QR Code generation failed:", error);
+      }
+    } else {
+      console.warn("⚠️ QRious library not loaded or canvas not found");
+    }
+    
     container.style.display = "block";
     console.log("✅ Payment URL displayed successfully");
   } else {
