@@ -102,22 +102,7 @@
     <!-- Payment URL Display -->
     <div id="paymentUrlContainer" style="display:none;">
       
-      <!-- QR Code Section -->
-      <div class="qr-section">
-        <p style="text-align: center; margin-bottom: 6px; font-weight: bold; color: #333; font-size: 12px;">📱 Scan QR Code to Pay</p>
-        <div id="qrCodeContainer" style="display: flex; justify-content: center; background: white; padding: 12px; border-radius: 8px; border: 2px solid #1f8a70;">
-          <canvas id="qrCanvas"></canvas>
-        </div>
-        <p style="text-align: center; font-size: 10px; color: #888; margin-top: 6px;">Use any UPI app to scan</p>
-      </div>
-
-      <!-- OR Divider -->
-      <div style="text-align: center; margin: 10px 0; position: relative;">
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 0;">
-        <span style="background: #f0f8ff; padding: 0 8px; position: relative; top: -10px; color: #888; font-size: 11px;">OR</span>
-      </div>
-
-      <!-- Payment Link Section -->
+       <!-- Payment Link Section -->
       <p style="margin-bottom: 6px; font-size: 14px;">Payment Link (Mobile Users):</p>
       <div class="url-row">
         <a id="paymentUrlLink" href="#" target="_blank" style="flex: 1; text-decoration: none;">
@@ -134,7 +119,23 @@
   </div>
 </div>
 
-<!-- LOADING OVERLAY -->
+    <!-- OR Divider -->
+      <div style="text-align: center; margin: 10px 0; position: relative;">
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 0;">
+        <span style="background: #f0f8ff; padding: 0 8px; position: relative; top: -10px; color: #888; font-size: 11px;">OR</span>
+      </div>
+
+
+      <!-- QR Code Section -->
+      <div class="qr-section">
+        <p style="text-align: center; margin-bottom: 6px; font-weight: bold; color: #333; font-size: 12px;">📱 Scan QR Code to Pay</p>
+        <div id="qrCodeContainer" style="display: flex; justify-content: center; background: white; padding: 12px; border-radius: 8px; border: 2px solid #1f8a70;">
+          <canvas id="qrCanvas"></canvas>
+        </div>
+        <p style="text-align: center; font-size: 10px; color: #888; margin-top: 6px;">Use any UPI app to scan</p>
+      </div>
+
+    <!-- LOADING OVERLAY -->
 <div id="loadingOverlay" style="display:none;">
   <div class="loader-box">
     <div class="spinner"></div>
