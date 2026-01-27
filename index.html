@@ -84,8 +84,9 @@
       ₹<span id="paymentTotal">--</span>
     </div>
 
-    <!-- Hidden orderId for reference -->
+    <!-- Hidden orderId and paymentType for reference -->
     <span id="orderId" style="display:none;"></span>
+    <span id="currentPaymentType" style="display:none;"></span>
 
     <div class="payment-actions">
       <button class="cancel-btn" onclick="closePaymentPopup()">Cancel</button>
@@ -129,7 +130,15 @@
         <p style="text-align: center; font-size: 10px; color: #888; margin-top: 6px;">Use any UPI app to scan</p>
       </div>
 
-    <p class="upi-hint" style="margin-top: 8px; font-size: 11px;">Auto-redirecting in 3 seconds (mobile only)...</p>
+      <!-- Have You Paid Button -->
+      <div style="margin-top: 16px; text-align: center;">
+        <button onclick="confirmPaymentPaid()" style="width: 100%; padding: 14px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold;">
+          ✅ Have You Paid?
+        </button>
+      </div>
+    </div>
+
+    <p class="upi-hint" style="margin-top: 8px; font-size: 11px;">Complete payment and click button above</p>
   </div>
 </div>
 
