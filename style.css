@@ -522,4 +522,40 @@ textarea {
     color: white;
   }
 }
+/* ================================
+   RESPONSIVE FOOTER FIX (FINAL)
+   ================================ */
+
+/* FOOTER BASE */
+.responsive-footer {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: white;
+}
+
+/* MOBILE FOOTER HIDDEN ON DESKTOP */
+.mobile-footer {
+  display: none;
+}
+
+/* MOBILE VIEW */
+@media (max-width: 768px) {
+
+  /* Hide footer from red/logo area */
+  .logo-section .responsive-footer {
+    display: none;
+  }
+
+  /* Show footer below Book Now button */
+  .mobile-footer {
+    display: block;
+    background: #8b1d1d;
+    padding: 14px;
+    border-radius: 12px;
+    margin-top: 20px;
+    color: white;
+    text-align: center;
+  }
+}
 
