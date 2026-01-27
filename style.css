@@ -443,3 +443,52 @@ textarea {
     padding: 8px;
   }
 }
+
+/* ===============================
+   NEW ORDER BUTTON (TOP RIGHT)
+   =============================== */
+.new-order-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2000;
+
+  font-size: 18px;
+  padding: 10px 22px;
+  background: #198754;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.new-order-btn:hover {
+  opacity: 0.9;
+}
+
+.new-order-btn:active {
+  transform: scale(0.97);
+}
+
+/* ===============================
+   LEFT PANEL FOOTER INFO
+   =============================== */
+.logo-section {
+  position: relative; /* REQUIRED for bottom-left positioning */
+}
+
+.app-footer-info {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+
+  text-align: left;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.app-footer-info div:first-child {
+  font-weight: 600;
+}
+
