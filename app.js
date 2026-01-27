@@ -93,10 +93,47 @@ function unlockOrderCreation() {
 }
 
 /************************************
+ * NEW ORDER RESET (ADDED)
+ ************************************/
+function resetOrder() {
+  for (const key in cart) {
+    delete cart[key];
+  }
+
+  isOrderCreating = false;
+  generatedOrderId = "";
+  currentPaymentType = "";
+  finalDeliveryCharge = 0;
+
+  if (nameInput) nameInput.value = "";
+  if (mobileInput) mobileInput.value = "";
+  if (addressInput) addressInput.value = "";
+  if (branchSelect) branchSelect.selectedIndex = 0;
+  if (itemSelect) itemSelect.selectedIndex = 0;
+  if (qtyInput) qtyInput.value = 1;
+
+  if (cartList) cartList.innerHTML = "";
+  if (totalPriceEl) totalPriceEl.innerText = "0";
+  if (paymentSummary) paymentSummary.innerHTML = "";
+  if (paymentTotal) paymentTotal.innerText = "0";
+
+  if (paymentModal) paymentModal.style.display = "none";
+  hideLoading();
+
+  const paymentUrlContainer = document.getElementById("paymentUrlContainer");
+  if (paymentUrlContainer) {
+    paymentUrlContainer.style.display = "none";
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/************************************
  * ORDER TYPE LOGIC
  ************************************/
 function toggleAddress() {
-  addressBox.style.display = orderTypeSelect.value === "delivery" ? "block" : "none";
+  addressBox.style.display =
+    orderTypeSelect.value === "delivery" ? "block" : "none";
 }
 
 /************************************
@@ -223,7 +260,8 @@ function bookNow() {
     itemsTotal += d.qty * d.price;
   });
 
-  finalDeliveryCharge = orderTypeSelect.value === "delivery" ? DELIVERY_CHARGE : 0;
+  finalDeliveryCharge =
+    orderTypeSelect.value === "delivery" ? DELIVERY_CHARGE : 0;
   const totalAmount = itemsTotal + finalDeliveryCharge;
 
   fetch(ORDER_API, {
@@ -233,7 +271,10 @@ function bookNow() {
       name: nameInput.value.trim(),
       mobile: mobileInput.value.trim(),
       orderType: orderTypeSelect.value,
-      address: orderTypeSelect.value === "delivery" ? addressInput.value.trim() : "",
+      address:
+        orderTypeSelect.value === "delivery"
+          ? addressInput.value.trim()
+          : "",
       branch: branchSelect.value,
       items: Object.entries(cart).map(([pan, d]) => ({
         item: pan,
@@ -258,7 +299,6 @@ function bookNow() {
 
       generatedOrderId = row.Order_ID;
 
-      // ✅ Sync Order ID to hidden span
       if (orderIdSpan) {
         orderIdSpan.innerText = generatedOrderId;
       }
@@ -289,6 +329,20 @@ function bookNow() {
 }
 
 /************************************
+ * NEW ORDER BUTTON HANDLER (ADDED)
+ ************************************/
+document.addEventListener("DOMContentLoaded", () => {
+  const newOrderBtn = document.getElementById("newOrderBtn");
+
+  if (newOrderBtn) {
+    newOrderBtn.addEventListener("click", () => {
+      if (!confirm("Start a new order? Current order will be cleared.")) return;
+      resetOrder();
+    });
+  }
+});
+
+/************************************
  * CLOSE PAYMENT POPUP
  ************************************/
 function closePaymentPopup() {
@@ -306,13 +360,7 @@ async function payUpi(percent) {
   }
 
   const paymentType = percent === 50 ? "HALF" : "FULL";
-  currentPaymentType = paymentType; // Store for later confirmation
-
-  console.log("🔥 Initiating payment:", {
-    orderId: generatedOrderId,
-    paymentType: paymentType,
-    percent: percent,
-  });
+  currentPaymentType = paymentType;
 
   try {
     const response = await fetch(PAYMENT_API, {
@@ -324,38 +372,16 @@ async function payUpi(percent) {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
     const data = await response.json();
+    if (!data.paymentUrl) return alert("❌ Payment URL not received");
 
-    console.log("✅ Payment response:", data);
-
-    if (!data.paymentUrl) {
-      alert("❌ Payment URL not received from server");
-      console.error("Response data:", data);
-      return;
-    }
-
-    // ✅ Display the payment URL
     displayPaymentUrl(data.paymentUrl);
 
-    // ✅ Only auto-redirect on mobile devices
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      console.log("🔗 Mobile device detected - Auto-redirecting in 3 seconds to:", data.paymentUrl);
-      setTimeout(() => {
-        window.location.href = data.paymentUrl;
-      }, 3000);
-    } else {
-      console.log("💻 Desktop/Tablet detected - QR Code displayed, no auto-redirect");
+    if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      setTimeout(() => (window.location.href = data.paymentUrl), 3000);
     }
-    
   } catch (err) {
-    console.error("❌ Payment error:", err);
-    alert("❌ Payment initiation failed. Please try again.");
+    alert("❌ Payment initiation failed");
   }
 }
 
@@ -363,50 +389,29 @@ async function payUpi(percent) {
  * CONFIRM PAYMENT PAID
  ************************************/
 async function confirmPaymentPaid() {
-  if (!generatedOrderId) {
-    alert("❌ Order ID not found");
-    return;
-  }
-
-  if (!currentPaymentType) {
-    alert("❌ Payment type not found. Please select Pay 50% or Pay Full first.");
-    return;
-  }
-
-  console.log(`💳 Payment confirmed: ${currentPaymentType} for order ${generatedOrderId}`);
+  if (!generatedOrderId || !currentPaymentType) return;
 
   showLoading();
 
   try {
-    // Send confirmation to n8n
-    const res = await fetch(ORDER_API, {
+    await fetch(ORDER_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         orderId: generatedOrderId,
         paymentConfirmed: "YES",
-        paymentType: currentPaymentType, // HALF or FULL
+        paymentType: currentPaymentType,
         confirmedAt: new Date().toISOString(),
       }),
     });
 
     hideLoading();
+    alert("✅ Payment confirmation submitted");
 
-    if (paymentModal) {
-      paymentModal.style.display = "none";
-    }
-
-    alert("✅ Thank you! Your payment is being verified. You'll receive confirmation shortly.");
-
-    // Reset and reload page
-    setTimeout(() => {
-      window.location.reload();
-    }, 2000);
-
-  } catch (err) {
-    console.error("❌ Confirmation error:", err);
+    setTimeout(() => window.location.reload(), 2000);
+  } catch {
     hideLoading();
-    alert("❌ Failed to save confirmation. Please contact support.");
+    alert("❌ Failed to save confirmation");
   }
 }
 
@@ -418,39 +423,21 @@ function displayPaymentUrl(url) {
   const link = document.getElementById("paymentUrlLink");
   const text = document.getElementById("paymentUrlText");
   const qrCanvas = document.getElementById("qrCanvas");
-  
-  console.log("📎 Displaying payment URL:", url);
-  console.log("Container found:", !!container);
-  console.log("Link found:", !!link);
-  console.log("QR Canvas found:", !!qrCanvas);
-  
+
   if (container && link && text) {
     link.href = url;
     text.textContent = url;
-    
-    // Generate QR Code
-    if (qrCanvas && typeof QRious !== 'undefined') {
-      try {
-        const qr = new QRious({
-          element: qrCanvas,
-          value: url,
-          size: 180,
-          level: 'H',
-          background: 'white',
-          foreground: '#1f8a70'
-        });
-        console.log("✅ QR Code generated successfully");
-      } catch (error) {
-        console.error("❌ QR Code generation failed:", error);
-      }
-    } else {
-      console.warn("⚠️ QRious library not loaded or canvas not found");
+
+    if (qrCanvas && typeof QRious !== "undefined") {
+      new QRious({
+        element: qrCanvas,
+        value: url,
+        size: 180,
+        level: "H",
+      });
     }
-    
+
     container.style.display = "block";
-    console.log("✅ Payment URL displayed successfully");
-  } else {
-    console.error("❌ Payment URL elements not found!");
   }
 }
 
@@ -459,24 +446,7 @@ function displayPaymentUrl(url) {
  ************************************/
 function copyPaymentUrl() {
   const link = document.getElementById("paymentUrlLink");
-  
-  if (link && link.href) {
-    const url = link.href;
-    
-    navigator.clipboard.writeText(url)
-      .then(() => {
-        alert("✅ Payment link copied to clipboard!");
-      })
-      .catch(() => {
-        const tempInput = document.createElement("input");
-        tempInput.value = url;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempInput);
-        alert("✅ Payment link copied!");
-      });
-  }
+  if (link && link.href) navigator.clipboard.writeText(link.href);
 }
 
 /************************************
@@ -492,3 +462,4 @@ window.closePaymentPopup = closePaymentPopup;
 window.toggleAddress = toggleAddress;
 window.copyPaymentUrl = copyPaymentUrl;
 window.confirmPaymentPaid = confirmPaymentPaid;
+window.resetOrder = resetOrder;
