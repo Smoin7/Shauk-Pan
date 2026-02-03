@@ -137,7 +137,7 @@ function toggleAddress() {
 }
 
 /************************************
- * LOAD PAN INVENTORY
+ * LOAD PAN INVENTORY - FIXED
  ************************************/
 function loadPanInventory() {
   itemSelect.innerHTML = `<option value="">Loading Paans...</option>`;
@@ -153,10 +153,24 @@ function loadPanInventory() {
       }
 
       data.pans.forEach((pan) => {
-        panPriceMap[pan.name] = pan.price;
         const opt = document.createElement("option");
-        opt.value = pan.name;
-        opt.textContent = `${pan.name} (₹${pan.price})`;
+        
+        // Check if price is empty, null, or zero
+        if (!pan.price || pan.price === "" || pan.price === "0" || pan.price === 0) {
+          // Create disabled category header
+          opt.value = "";
+          opt.textContent = `━━━ ${pan.name} ━━━`;
+          opt.disabled = true;
+          opt.style.fontWeight = "bold";
+          opt.style.backgroundColor = "#f0f0f0";
+          opt.style.color = "#666";
+        } else {
+          // Regular selectable item
+          panPriceMap[pan.name] = pan.price;
+          opt.value = pan.name;
+          opt.textContent = `${pan.name} (₹${pan.price})`;
+        }
+        
         itemSelect.appendChild(opt);
       });
     })
