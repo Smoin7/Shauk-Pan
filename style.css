@@ -474,13 +474,14 @@ textarea {
    LEFT PANEL FOOTER INFO
    =============================== */
 .logo-section {
-  position: relative;
+  position: relative; /* REQUIRED for bottom-left positioning */
 }
 
 .app-footer-info {
   position: absolute;
   bottom: 20px;
   left: 20px;
+
   text-align: left;
   color: #ffffff;
   font-size: 14px;
@@ -490,6 +491,40 @@ textarea {
 .app-footer-info div:first-child {
   font-weight: 600;
 }
+/* FOOTER BASE */
+.responsive-footer {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: white;
+}
+
+/* MOBILE FOOTER HIDDEN ON DESKTOP */
+.mobile-footer {
+  display: none;
+}
+
+/* MOBILE VIEW */
+@media (max-width: 768px) {
+
+  /* Hide footer from red area */
+  .logo-section .responsive-footer {
+    display: none;
+  }
+
+  /* Show footer below Book Now */
+  .mobile-footer {
+    display: block;
+    background: #8b1d1d;
+    padding: 14px;
+    border-radius: 12px;
+    margin-top: 20px;
+    color: white;
+  }
+}
+/* ================================
+   RESPONSIVE FOOTER FIX (FINAL)
+   ================================ */
 
 /* FOOTER BASE */
 .responsive-footer {
@@ -507,41 +542,12 @@ textarea {
 /* MOBILE VIEW */
 @media (max-width: 768px) {
 
+  /* Hide footer from red/logo area */
   .logo-section .responsive-footer {
     display: none;
   }
 
-  .mobile-footer {
-    display: block;
-    background: #8b1d1d;
-    padding: 14px;
-    border-radius: 12px;
-    margin-top: 20px;
-    color: white;
-  }
-}
-
-/* ================================
-   RESPONSIVE FOOTER FIX (FINAL)
-   ================================ */
-
-.responsive-footer {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 13px;
-  color: white;
-}
-
-.mobile-footer {
-  display: none;
-}
-
-@media (max-width: 768px) {
-
-  .logo-section .responsive-footer {
-    display: none;
-  }
-
+  /* Show footer below Book Now button */
   .mobile-footer {
     display: block;
     background: #8b1d1d;
