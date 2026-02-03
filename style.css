@@ -27,6 +27,10 @@ body {
   color: white;
   text-align: center;
   padding: 40px 30px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .logo-section img {
@@ -401,24 +405,158 @@ textarea {
   }
 }
 
-/* MOBILE RESPONSIVE */
+/* ===============================
+   NEW ORDER BUTTON (TOP RIGHT)
+   =============================== */
+.new-order-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2000;
+
+  font-size: 18px;
+  padding: 10px 22px;
+  background: #198754;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.new-order-btn:hover {
+  opacity: 0.9;
+}
+
+.new-order-btn:active {
+  transform: scale(0.97);
+}
+
+/* ===============================
+   LEFT PANEL FOOTER INFO
+   =============================== */
+.app-footer-info {
+  text-align: left;
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.app-footer-info label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.app-footer-info div {
+  margin: 4px 0;
+}
+
+.app-footer-info div:first-of-type {
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* RESPONSIVE FOOTER */
+.responsive-footer {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: white;
+}
+
+/* MOBILE FOOTER HIDDEN ON DESKTOP */
+.mobile-footer {
+  display: none;
+}
+
+/* ===============================
+   MOBILE RESPONSIVE
+   =============================== */
 @media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
   .container {
     flex-direction: column;
   }
+
   .logo-section,
   .form-section {
     width: 100%;
   }
-  
+
+  /* FIXED: Proper mobile layout for logo section */
+  .logo-section {
+    padding: 30px 20px 20px;
+    min-height: auto;
+  }
+
+  .logo-section h2 {
+    font-size: 22px;
+    margin: 12px 0 6px;
+  }
+
+  .logo-section p {
+    font-size: 14px;
+    margin: 0 0 16px;
+  }
+
+  /* FIXED: Prevent text merging in footer */
+  .app-footer-info {
+    position: static;
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .app-footer-info label {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .app-footer-info div {
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  /* Hide footer from red/logo area */
+  .logo-section .responsive-footer {
+    display: none;
+  }
+
+  /* Show footer below Book Now button */
+  .mobile-footer {
+    display: block;
+    background: #8b1d1d;
+    padding: 14px;
+    border-radius: 12px;
+    margin-top: 20px;
+    color: white;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .form-section {
+    padding: 24px 20px;
+  }
+
   .payment-actions {
     flex-direction: column;
   }
-  
+
   .modal {
     padding: 10px 0;
   }
-  
+
   .modal-content {
     margin: 10px auto;
     max-width: 95%;
@@ -442,119 +580,19 @@ textarea {
     font-size: 10px;
     padding: 8px;
   }
-}
 
-/* ===============================
-   NEW ORDER BUTTON (TOP RIGHT)
-   =============================== */
-.new-order-btn {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 2000;
-
-  font-size: 18px;
-  padding: 10px 22px;
-  background: #198754;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.new-order-btn:hover {
-  opacity: 0.9;
-}
-
-.new-order-btn:active {
-  transform: scale(0.97);
-}
-
-/* ===============================
-   LEFT PANEL FOOTER INFO
-   =============================== */
-.logo-section {
-  position: relative; /* REQUIRED for bottom-left positioning */
-}
-
-.app-footer-info {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-
-  text-align: left;
-  color: #ffffff;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.app-footer-info div:first-child {
-  font-weight: 600;
-}
-/* FOOTER BASE */
-.responsive-footer {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 13px;
-  color: white;
-}
-
-/* MOBILE FOOTER HIDDEN ON DESKTOP */
-.mobile-footer {
-  display: none;
-}
-
-/* MOBILE VIEW */
-@media (max-width: 768px) {
-
-  /* Hide footer from red area */
-  .logo-section .responsive-footer {
-    display: none;
-  }
-
-  /* Show footer below Book Now */
-  .mobile-footer {
-    display: block;
-    background: #8b1d1d;
-    padding: 14px;
-    border-radius: 12px;
-    margin-top: 20px;
-    color: white;
+  .new-order-btn {
+    font-size: 14px;
+    padding: 8px 16px;
+    top: 12px;
+    right: 12px;
   }
 }
-/* ================================
-   RESPONSIVE FOOTER FIX (FINAL)
-   ================================ */
 
-/* FOOTER BASE */
-.responsive-footer {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 13px;
-  color: white;
-}
-
-/* MOBILE FOOTER HIDDEN ON DESKTOP */
-.mobile-footer {
-  display: none;
-}
-
-/* MOBILE VIEW */
-@media (max-width: 768px) {
-
-  /* Hide footer from red/logo area */
-  .logo-section .responsive-footer {
-    display: none;
-  }
-
-  /* Show footer below Book Now button */
-  .mobile-footer {
-    display: block;
-    background: #8b1d1d;
-    padding: 14px;
-    border-radius: 12px;
-    margin-top: 20px;
-    color: white;
-    text-align: center;
-  }
+/* OPTION STYLING FOR CATEGORIES */
+select option:disabled {
+  font-weight: bold;
+  background-color: #f0f0f0;
+  color: #666;
+  font-style: italic;
 }
