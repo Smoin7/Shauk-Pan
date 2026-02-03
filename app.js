@@ -258,10 +258,10 @@ function bookNow() {
   if (!/^\d{10}$/.test(mobileInput.value.trim()))
     return alert("Enter valid 10-digit mobile number");
 
-  if (!branchSelect.value) return alert("Please select a branch");
-
   if (orderTypeSelect.value === "delivery" && !addressInput.value.trim())
     return alert("Please enter delivery address");
+
+  if (!branchSelect.value) return alert("Please select a branch");
 
   if (Object.keys(cart).length === 0)
     return alert("Please add at least one Paan");
